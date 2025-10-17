@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 
-function parseInvitationId(params: { id: string }) {
-  const id = Number.parseInt(params.id, 10);
+async function parseInvitationId(
+  params: { id: string } | Promise<{ id: string }>,
+) {
+  const resolved = await params;
+  const id = Number.parseInt(resolved.id, 10);
   if (!Number.isFinite(id)) {
     throw new Error("Invalid invitation id");
   }
@@ -12,11 +15,11 @@ function parseInvitationId(params: { id: string }) {
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAdminSession();
-    const id = parseInvitationId(params);
+    const id = await parseInvitationId(context.params);
 
     await prisma.invitation.delete({
       where: { id },

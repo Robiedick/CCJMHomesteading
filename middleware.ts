@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 import { withAuth } from "next-auth/middleware";
+import type { NextRequestWithAuth } from "next-auth/middleware";
 
 const SUPPORTED_LOCALES = ["en", "nl"] as const;
 const DEFAULT_LOCALE = "en" as const;
@@ -20,11 +21,11 @@ const adminMiddleware = withAuth({
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-export default function middleware(request: NextRequest) {
+export default function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {
-    return adminMiddleware(request);
+    return adminMiddleware(request as NextRequestWithAuth, event);
   }
 
   if (

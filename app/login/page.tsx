@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerAuthSession } from "@/lib/auth";
 import { DEFAULT_LOCALE } from "@/lib/i18n";
 import LoginForm from "./LoginForm";
+
+export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   const session = await getServerAuthSession();
@@ -36,7 +39,15 @@ export default async function LoginPage() {
           Sign in to manage articles and categories.
         </p>
       </div>
-      <LoginForm />
+      <Suspense
+        fallback={
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/40 p-6 text-center text-sm text-stone-700">
+            Loading form…
+          </div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

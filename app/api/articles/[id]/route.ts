@@ -6,8 +6,9 @@ import { slugify } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth";
 
-function getArticleId(params: { id: string }) {
-  const id = Number.parseInt(params.id, 10);
+async function getArticleId(params: { id: string } | Promise<{ id: string }>) {
+  const resolved = await params;
+  const id = Number.parseInt(resolved.id, 10);
   if (!Number.isFinite(id)) {
     throw new Error("Invalid article id");
   }
@@ -16,10 +17,10 @@ function getArticleId(params: { id: string }) {
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const id = getArticleId(params);
+    const id = await getArticleId(context.params);
     const article = await prisma.article.findUnique({
       where: { id },
       include: { categories: true },
@@ -40,12 +41,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAdminSession();
 
-    const id = getArticleId(params);
+    const id = await getArticleId(context.params);
     const existing = await prisma.article.findUnique({
       where: { id },
       select: {
@@ -139,12 +140,12 @@ export async function PUT(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAdminSession();
 
-    const id = getArticleId(params);
+    const id = await getArticleId(context.params);
 
     const existing = await prisma.article.delete({
       where: { id },

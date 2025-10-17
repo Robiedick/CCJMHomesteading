@@ -5,18 +5,22 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 import { userUpdateSchema } from "@/lib/validators";
 
-function parseUserId(params: { id: string }) {
-  const id = Number.parseInt(params.id, 10);
+async function parseUserId(params: { id: string } | Promise<{ id: string }>) {
+  const resolved = await params;
+  const id = Number.parseInt(resolved.id, 10);
   if (!Number.isFinite(id)) {
     throw new Error("Invalid user id");
   }
   return id;
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
   try {
     const session = await requireAdminSession();
-    const id = parseUserId(params);
+    const id = await parseUserId(context.params);
 
     const existing = await prisma.user.findUnique({
       where: { id },
@@ -88,7 +92,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       },
     });
 
-    if (Number(session.user?.id) === id && role !== session.user.role) {
+    if (
+      session.user &&
+      Number(session.user.id) === id &&
+      role !== session.user.role
+    ) {
       // If the current user demoted themselves, refresh auth on the client.
       // We simply return a hint; client can act accordingly if needed.
       return NextResponse.json({ user, roleChanged: true });
@@ -109,11 +117,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await requireAdminSession();
-    const id = parseUserId(params);
+    const id = await parseUserId(context.params);
 
     if (Number(session.user?.id) === id) {
       return NextResponse.json(

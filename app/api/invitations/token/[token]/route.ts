@@ -9,10 +9,11 @@ function isExpired(expiresAt: Date | null | undefined) {
 
 export async function GET(
   _request: Request,
-  { params }: { params: { token: string } },
+  context: { params: Promise<{ token: string }> },
 ) {
+  const { token } = await context.params;
   const invitation = await prisma.invitation.findUnique({
-    where: { token: params.token },
+    where: { token },
     select: {
       id: true,
       token: true,
@@ -45,11 +46,16 @@ export async function GET(
   return NextResponse.json(invitation);
 }
 
+type InvitationRedeemResult =
+  | { error: { message: string; status: number } }
+  | { user: { id: number } };
+
 export async function POST(
   request: Request,
-  { params }: { params: { token: string } },
+  context: { params: Promise<{ token: string }> },
 ) {
   try {
+    const { token } = await context.params;
     const body = await request.json();
     const parsed = invitationRedeemSchema.safeParse(body);
 
@@ -60,9 +66,9 @@ export async function POST(
     const { username, password } = parsed.data;
     const normalizedUsername = username.toLowerCase();
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result: InvitationRedeemResult = await prisma.$transaction(async (tx) => {
       const invitation = await tx.invitation.findUnique({
-        where: { token: params.token },
+        where: { token },
         select: {
           id: true,
           role: true,
@@ -127,7 +133,7 @@ export async function POST(
         },
       });
 
-      return { user } as const;
+      return { user };
     });
 
     if ("error" in result) {

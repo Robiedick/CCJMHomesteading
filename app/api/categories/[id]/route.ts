@@ -6,8 +6,9 @@ import { slugify } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth";
 
-function getCategoryId(params: { id: string }) {
-  const id = Number.parseInt(params.id, 10);
+async function getCategoryId(params: { id: string } | Promise<{ id: string }>) {
+  const resolved = await params;
+  const id = Number.parseInt(resolved.id, 10);
   if (!Number.isFinite(id)) {
     throw new Error("Invalid category id");
   }
@@ -16,12 +17,12 @@ function getCategoryId(params: { id: string }) {
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAdminSession();
 
-    const id = getCategoryId(params);
+    const id = await getCategoryId(context.params);
     const body = await request.json();
 
     const existing = await prisma.category.findUnique({
@@ -92,12 +93,12 @@ export async function PUT(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAdminSession();
 
-    const id = getCategoryId(params);
+    const id = await getCategoryId(context.params);
 
     const existing = await prisma.category.delete({
       where: { id },

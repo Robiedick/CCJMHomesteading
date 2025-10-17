@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown, { type Components } from "react-markdown";
+import type { HTMLAttributes, ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { getDictionary, locales, type Locale } from "@/lib/i18n";
@@ -11,7 +12,7 @@ type ArticlePageProps = {
 
 export const dynamic = "force-dynamic";
 
-const markdownComponents: Components = {
+const markdownComponents = {
   h1: ({ children }) => (
     <h2 className="mt-10 text-3xl font-semibold text-stone-900 first:mt-0">{children}</h2>
   ),
@@ -47,17 +48,35 @@ const markdownComponents: Components = {
       {children}
     </blockquote>
   ),
-  code: ({ inline, children }) =>
-    inline ? (
-      <code className="rounded bg-stone-100 px-1 py-0.5 text-sm font-mono text-stone-700">
+  code: ((props) => {
+    const {
+      inline,
+      className,
+      children,
+      ...rest
+    } = props as {
+      inline?: boolean;
+      className?: string;
+      children?: ReactNode;
+    } & HTMLAttributes<HTMLElement>;
+
+    if (inline) {
+      const cls = `rounded bg-stone-100 px-1 py-0.5 text-sm font-mono text-stone-700${className ? ` ${className}` : ""}`;
+      return (
+        <code {...rest} className={cls}>
+          {children}
+        </code>
+      );
+    }
+
+    const blockCls = `mt-4 block whitespace-pre-wrap rounded-lg bg-stone-900 px-4 py-3 text-sm text-emerald-100${className ? ` ${className}` : ""}`;
+    return (
+      <code {...rest} className={blockCls}>
         {children}
       </code>
-    ) : (
-      <code className="mt-4 block whitespace-pre-wrap rounded-lg bg-stone-900 px-4 py-3 text-sm text-emerald-100">
-        {children}
-      </code>
-    ),
-};
+    );
+  }) as Components["code"],
+} as Components;
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { locale, slug } = params;
