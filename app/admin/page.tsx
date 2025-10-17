@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const [articlesCount, publishedCount, categoriesCount, latestArticles] =
     await Promise.all([
