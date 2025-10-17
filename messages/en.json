@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "tagline": "Rooted in family, soil, and thoughtful living.",
+    "latestStories": "Latest stories",
+    "signIn": "Sign in"
+  },
+  "switcher": {
+    "label": "Language",
+    "english": "English",
+    "dutch": "Nederlands"
+  },
+  "hero": {
+    "title": "Lessons from our homestead, shaped by seasons and shared at the kitchen table.",
+    "description": "Wander through preserving experiments, garden breakthroughs, and the everyday rituals that keep our crew grounded. These notes are written for friends who love slow mornings, full pantries, and muddy boots.",
+    "ctaPrimary": "Read the latest",
+    "ctaSecondary": "Browse topics",
+    "editorTitle": "Want to publish the next guide or recipe?",
+    "editorDescription": "Sign in with your editor account to draft stories, tune categories, and keep the archive tidy. We refresh the site automatically every time you hit save.",
+    "editorLink": "Open editor dashboard →"
+  },
+  "topics": {
+    "title": "Browse topics",
+    "description": "Curated categories make it easy to jump to fermentation experiments, garden notes, family recipes, and seasonal checklists.",
+    "empty": "No categories yet. Create one in the editor dashboard to help friends explore.",
+    "countSingular": "story",
+    "countPlural": "stories"
+  },
+  "stories": {
+    "title": "Latest stories",
+    "description": "Fresh from the homestead journal — saved moments, how-tos, and seasonal reflections.",
+    "empty": "No published stories yet. Sign in and share the latest homestead win.",
+    "countLabel": "published",
+    "countSingular": "story",
+    "countPlural": "stories",
+    "readMore": "Read story →",
+    "uncategorized": "Homestead life"
+  },
+  "article": {
+    "back": "← Back to all stories",
+    "updated": "Updated",
+    "published": "Published"
+  },
+  "category": {
+    "headerLabel": "Homestead topic",
+    "empty": "No published articles in this category yet. Check back soon!"
+  },
+  "footer": {
+    "note": "© {{year}} CCJM Homesteading. All rights reserved.",
+    "signature": "Built with love, coffee, and plenty of soil under our nails."
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "tagline": "Geworteld in familie, aarde en aandachtig leven.",
+    "latestStories": "Laatste verhalen",
+    "signIn": "Inloggen"
+  },
+  "switcher": {
+    "label": "Taal",
+    "english": "English",
+    "dutch": "Nederlands"
+  },
+  "hero": {
+    "title": "Verhalen van onze boerderij, gevormd door de seizoenen en gedeeld aan de keukentafel.",
+    "description": "Lees mee met conserveringsproeven, tuinontwikkelingen en de dagelijkse rituelen die ons gezin dragen. Aantekeningen voor vrienden die houden van langzame ochtenden, volle voorraadkasten en modderlaarzen.",
+    "ctaPrimary": "Lees het laatste",
+    "ctaSecondary": "Bekijk onderwerpen",
+    "editorTitle": "Wil je de volgende handleiding of recept publiceren?",
+    "editorDescription": "Log in met je redacteursaccount om verhalen te schrijven, categorieën te beheren en het archief netjes te houden. Elke keer als je opslaat, verversen we de site automatisch.",
+    "editorLink": "Open redactiedashboard →"
+  },
+  "topics": {
+    "title": "Bekijk onderwerpen",
+    "description": "Met deze categorieën vind je snel alles over inmaken, tuinieren, familie­recepten en seizoenslijstjes.",
+    "empty": "Nog geen categorieën. Maak er een in het redactiedashboard zodat vrienden kunnen rondstruinen.",
+    "countSingular": "verhaal",
+    "countPlural": "verhalen"
+  },
+  "stories": {
+    "title": "Laatste verhalen",
+    "description": "Vers uit het boerderijdagboek — momenten, how-to’s en seizoensreflecties.",
+    "empty": "Nog geen gepubliceerde verhalen. Log in en deel het laatste boerderijhoogtepunt.",
+    "countLabel": "gepubliceerd",
+    "countSingular": "verhaal",
+    "countPlural": "verhalen",
+    "readMore": "Lees verder →",
+    "uncategorized": "Boerderijleven"
+  },
+  "article": {
+    "back": "← Terug naar alle verhalen",
+    "updated": "Bijgewerkt",
+    "published": "Gepubliceerd"
+  },
+  "category": {
+    "headerLabel": "Boerderij onderwerp",
+    "empty": "Nog geen verhalen in deze categorie. Kom later terug!"
+  },
+  "footer": {
+    "note": "© {{year}} CCJM Homesteading. Alle rechten voorbehouden.",
+    "signature": "Gebouwd met liefde, koffie en heel wat aarde onder onze nagels."
+  }
+}
