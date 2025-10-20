@@ -4,10 +4,14 @@ import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
   await requireAdminSession();
 
-  const presetId = Number.parseInt(context.params.id, 10);
+  const { id } = await context.params;
+  const presetId = Number.parseInt(id, 10);
   if (!Number.isFinite(presetId)) {
     return NextResponse.json({ message: "Invalid preset id." }, { status: 400 });
   }
