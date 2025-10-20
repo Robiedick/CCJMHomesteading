@@ -64,6 +64,20 @@
     "success": "Account created. You can sign in now.",
     "loading": "Loading form…"
   },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search stories or topics…",
+    "noResults": "No matches found. Try a different keyword or adjust the filters.",
+    "articlesHeading": "Articles",
+    "categoriesHeading": "Categories",
+    "filtersLabel": "Filter results",
+    "filterArticlesLabel": "Articles",
+    "filterCategoriesLabel": "Categories",
+    "clearLabel": "Clear search",
+    "buttonLabel": "Search",
+    "resultsHeadingTemplate": "Results for “{{query}}”",
+    "minimumCharactersMessage": "Type at least 2 characters to search."
+  },
   "footer": {
     "note": "© {{year}} CCJM Homesteading. All rights reserved.",
     "signature": "Built with love, coffee, and plenty of soil under our nails."

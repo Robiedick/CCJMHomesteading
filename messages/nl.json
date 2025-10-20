@@ -64,6 +64,20 @@
     "success": "Account aangemaakt. Je kunt nu inloggen.",
     "loading": "Formulier laden…"
   },
+  "search": {
+    "title": "Zoeken",
+    "placeholder": "Zoek verhalen of onderwerpen…",
+    "noResults": "Geen resultaten gevonden. Probeer een andere zoekterm of pas de filters aan.",
+    "articlesHeading": "Artikelen",
+    "categoriesHeading": "Categorieën",
+    "filtersLabel": "Filter resultaten",
+    "filterArticlesLabel": "Artikelen",
+    "filterCategoriesLabel": "Categorieën",
+    "clearLabel": "Zoekopdracht wissen",
+    "buttonLabel": "Zoeken",
+    "resultsHeadingTemplate": "Resultaten voor “{{query}}”",
+    "minimumCharactersMessage": "Typ minimaal 2 tekens om te zoeken."
+  },
   "footer": {
     "note": "© {{year}} CCJM Homesteading. Alle rechten voorbehouden.",
     "signature": "Gebouwd met liefde, koffie en heel wat aarde onder onze nagels."

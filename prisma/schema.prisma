@@ -115,6 +115,18 @@ model HomepageContent {
   loginInvalidCredentialsMessage String @default("")
   loginSuccessMessage      String   @default("")
   loginLoadingMessage      String   @default("")
+  searchTitle              String   @default("")
+  searchPlaceholder        String   @default("")
+  searchNoResults          String   @default("")
+  searchArticlesHeading    String   @default("")
+  searchCategoriesHeading  String   @default("")
+  searchFiltersLabel       String   @default("")
+  searchFilterArticlesLabel String  @default("")
+  searchFilterCategoriesLabel String @default("")
+  searchClearLabel         String   @default("")
+  searchButtonLabel        String   @default("")
+  searchResultsHeadingTemplate String @default("")
+  searchMinimumCharactersMessage String @default("")
   footerNote               String
   footerSignature          String
   createdAt                DateTime @default(now())

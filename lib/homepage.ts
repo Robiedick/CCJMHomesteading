@@ -50,6 +50,18 @@ export type HomepageContentData = {
   loginInvalidCredentialsMessage: string;
   loginSuccessMessage: string;
   loginLoadingMessage: string;
+  searchTitle: string;
+  searchPlaceholder: string;
+  searchNoResults: string;
+  searchArticlesHeading: string;
+  searchCategoriesHeading: string;
+  searchFiltersLabel: string;
+  searchFilterArticlesLabel: string;
+  searchFilterCategoriesLabel: string;
+  searchClearLabel: string;
+  searchButtonLabel: string;
+  searchResultsHeadingTemplate: string;
+  searchMinimumCharactersMessage: string;
   footerNote: string;
   footerSignature: string;
 };
@@ -146,6 +158,24 @@ export async function getDefaultHomepageContent(locale: Locale): Promise<Homepag
       dictionary.login?.success ??
       "Account created. You can sign in now.",
     loginLoadingMessage: dictionary.login?.loading ?? "Loading form…",
+    searchTitle: dictionary.search?.title ?? "Search",
+    searchPlaceholder: dictionary.search?.placeholder ?? "Search stories or topics…",
+    searchNoResults:
+      dictionary.search?.noResults ??
+      "No matches found. Try a different keyword or adjust the filters.",
+    searchArticlesHeading: dictionary.search?.articlesHeading ?? "Articles",
+    searchCategoriesHeading: dictionary.search?.categoriesHeading ?? "Categories",
+    searchFiltersLabel: dictionary.search?.filtersLabel ?? "Filter results",
+    searchFilterArticlesLabel: dictionary.search?.filterArticlesLabel ?? "Articles",
+    searchFilterCategoriesLabel:
+      dictionary.search?.filterCategoriesLabel ?? "Categories",
+    searchClearLabel: dictionary.search?.clearLabel ?? "Clear search",
+    searchButtonLabel: dictionary.search?.buttonLabel ?? "Search",
+    searchResultsHeadingTemplate:
+      dictionary.search?.resultsHeadingTemplate ?? 'Results for “{{query}}”',
+    searchMinimumCharactersMessage:
+      dictionary.search?.minimumCharactersMessage ??
+      "Type at least 2 characters to search.",
     footerNote: dictionary.footer.note,
     footerSignature: dictionary.footer.signature,
   };
@@ -200,6 +230,18 @@ export function mapDataToUpdateInput(data: HomepageContentData): Omit<HomepageCo
     loginInvalidCredentialsMessage: data.loginInvalidCredentialsMessage,
     loginSuccessMessage: data.loginSuccessMessage,
     loginLoadingMessage: data.loginLoadingMessage,
+    searchTitle: data.searchTitle,
+    searchPlaceholder: data.searchPlaceholder,
+    searchNoResults: data.searchNoResults,
+    searchArticlesHeading: data.searchArticlesHeading,
+    searchCategoriesHeading: data.searchCategoriesHeading,
+    searchFiltersLabel: data.searchFiltersLabel,
+    searchFilterArticlesLabel: data.searchFilterArticlesLabel,
+    searchFilterCategoriesLabel: data.searchFilterCategoriesLabel,
+    searchClearLabel: data.searchClearLabel,
+    searchButtonLabel: data.searchButtonLabel,
+    searchResultsHeadingTemplate: data.searchResultsHeadingTemplate,
+    searchMinimumCharactersMessage: data.searchMinimumCharactersMessage,
     footerNote: data.footerNote,
     footerSignature: data.footerSignature,
   };
@@ -254,6 +296,18 @@ function mapRecordToData(record: HomepageContent): HomepageContentData {
     loginInvalidCredentialsMessage: record.loginInvalidCredentialsMessage,
     loginSuccessMessage: record.loginSuccessMessage,
     loginLoadingMessage: record.loginLoadingMessage,
+    searchTitle: record.searchTitle,
+    searchPlaceholder: record.searchPlaceholder,
+    searchNoResults: record.searchNoResults,
+    searchArticlesHeading: record.searchArticlesHeading,
+    searchCategoriesHeading: record.searchCategoriesHeading,
+    searchFiltersLabel: record.searchFiltersLabel,
+    searchFilterArticlesLabel: record.searchFilterArticlesLabel,
+    searchFilterCategoriesLabel: record.searchFilterCategoriesLabel,
+    searchClearLabel: record.searchClearLabel,
+    searchButtonLabel: record.searchButtonLabel,
+    searchResultsHeadingTemplate: record.searchResultsHeadingTemplate,
+    searchMinimumCharactersMessage: record.searchMinimumCharactersMessage,
     footerNote: record.footerNote,
     footerSignature: record.footerSignature,
   };

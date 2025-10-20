@@ -5,21 +5,47 @@ import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { locales, type Locale } from "@/lib/i18n";
 import { getHomepageContent } from "@/lib/homepage";
+import { searchPublicContent, minimumSearchCharacters } from "@/lib/search";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 
 type HomePageProps = {
   params: { locale: Locale };
+  searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({ params }: HomePageProps) {
+export default async function HomePage({ params, searchParams }: HomePageProps) {
   const { locale } = params;
   if (!locales.includes(locale)) {
     notFound();
   }
 
   const content = await getHomepageContent(locale);
+
+  const rawQuery = typeof searchParams?.q === "string" ? searchParams.q : "";
+  const searchQuery = rawQuery?.trim() ?? "";
+
+  const rawTypes = searchParams?.types;
+  const requestedTypes = new Set<string>();
+  if (Array.isArray(rawTypes)) {
+    rawTypes.forEach((value) => {
+      if (typeof value === "string") {
+        requestedTypes.add(value);
+      }
+    });
+  } else if (typeof rawTypes === "string") {
+    requestedTypes.add(rawTypes);
+  }
+
+  const defaultTypes = ["articles", "categories"];
+  if (requestedTypes.size === 0) {
+    defaultTypes.forEach((type) => requestedTypes.add(type));
+  }
+
+  const includeArticles = requestedTypes.has("articles");
+  const includeCategories = requestedTypes.has("categories");
+  const shouldSearch = searchQuery.length >= minimumSearchCharacters;
 
   const [articles, categories] = await Promise.all([
     prisma.article.findMany({
@@ -38,6 +64,14 @@ export default async function HomePage({ params }: HomePageProps) {
     }),
   ]);
 
+  const searchResults = shouldSearch
+    ? await searchPublicContent(searchQuery, {
+        includeArticles,
+        includeCategories,
+        limit: 8,
+      })
+    : { articles: [], categories: [] };
+
   const storyCountLabel =
     articles.length === 1
       ? content.storiesCountSingular
@@ -45,6 +79,12 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const topicsCountSingular = content.topicsCountSingular;
   const topicsCountPlural = content.topicsCountPlural;
+  const hasActiveQuery = searchQuery.length > 0;
+  const showMinimumCharactersHint =
+    hasActiveQuery && !shouldSearch && searchQuery.length > 0;
+  const resultsHeading = content.searchResultsHeadingTemplate.includes("{{query}}")
+    ? content.searchResultsHeadingTemplate.replace(/{{query}}/g, searchQuery)
+    : `${content.searchResultsHeadingTemplate} “${searchQuery}”`;
 
   return (
     <div className="relative min-h-screen text-stone-900">
@@ -142,6 +182,169 @@ export default async function HomePage({ params }: HomePageProps) {
                 </div>
               </div>
             </header>
+
+            <section className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-lg shadow-emerald-100/40 backdrop-blur">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-stone-900">
+                      {content.searchTitle}
+                    </h2>
+                    {!hasActiveQuery ? (
+                      <p className="text-sm text-stone-500">
+                        {content.searchMinimumCharactersMessage}
+                      </p>
+                    ) : null}
+                  </div>
+                  {hasActiveQuery ? (
+                    <Link
+                      href={`/${locale}`}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700"
+                    >
+                      {content.searchClearLabel}
+                    </Link>
+                  ) : null}
+                </div>
+                <form
+                  action={`/${locale}`}
+                  method="get"
+                  className="flex flex-col gap-4 sm:flex-row sm:items-center"
+                >
+                  <label className="relative flex-1">
+                    <span className="sr-only">{content.searchTitle}</span>
+                    <input
+                      type="search"
+                      name="q"
+                      aria-label={content.searchTitle}
+                      defaultValue={searchQuery}
+                      placeholder={content.searchPlaceholder}
+                      className="w-full rounded-xl border border-stone-200 bg-white/80 px-4 py-3 text-sm text-stone-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                    />
+                  </label>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-stone-600">
+                    <span className="font-medium uppercase tracking-[0.2em] text-stone-400">
+                      {content.searchFiltersLabel}
+                    </span>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="types"
+                        value="articles"
+                        defaultChecked={includeArticles}
+                        className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span>{content.searchFilterArticlesLabel}</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="types"
+                        value="categories"
+                        defaultChecked={includeCategories}
+                        className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span>{content.searchFilterCategoriesLabel}</span>
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                  >
+                    {content.searchButtonLabel}
+                  </button>
+                </form>
+                {showMinimumCharactersHint ? (
+                  <p className="text-sm text-stone-500">
+                    {content.searchMinimumCharactersMessage}
+                  </p>
+                ) : null}
+                {shouldSearch ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-stone-900">
+                        {resultsHeading}
+                      </h3>
+                    </div>
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      {includeArticles ? (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">
+                            {content.searchArticlesHeading}
+                          </h4>
+                          {searchResults.articles.length === 0 ? (
+                            <p className="rounded-xl border border-dashed border-stone-300 bg-white/80 px-4 py-3 text-sm text-stone-500">
+                              {content.searchNoResults}
+                            </p>
+                          ) : (
+                            <ul className="space-y-3">
+                              {searchResults.articles.map((item) => (
+                                <li
+                                  key={`article-${item.id}`}
+                                  className="rounded-xl border border-stone-200 bg-white p-4 text-sm shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+                                >
+                                  <Link
+                                    href={`/${locale}/articles/${item.slug}`}
+                                    className="font-semibold text-stone-900 transition hover:text-emerald-600"
+                                  >
+                                    {item.title}
+                                  </Link>
+                                  {item.snippet ? (
+                                    <p className="mt-2 text-stone-500">
+                                      {item.snippet}
+                                    </p>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ) : null}
+                      {includeCategories ? (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">
+                            {content.searchCategoriesHeading}
+                          </h4>
+                          {searchResults.categories.length === 0 ? (
+                            <p className="rounded-xl border border-dashed border-stone-300 bg-white/80 px-4 py-3 text-sm text-stone-500">
+                              {content.searchNoResults}
+                            </p>
+                          ) : (
+                            <ul className="space-y-3">
+                              {searchResults.categories.map((item) => (
+                                <li
+                                  key={`category-${item.id}`}
+                                  className="rounded-xl border border-stone-200 bg-white p-4 text-sm shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+                                >
+                                  <Link
+                                    href={`/${locale}/categories/${item.slug}`}
+                                    className="font-semibold text-stone-900 transition hover:text-emerald-600"
+                                  >
+                                    {item.name}
+                                  </Link>
+                                  {item.description ? (
+                                    <p className="mt-2 text-stone-500">
+                                      {item.description.slice(0, 160)}
+                                      {item.description.length > 160 ? "…" : ""}
+                                    </p>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                    {includeArticles && includeCategories
+                    && searchResults.articles.length === 0
+                    && searchResults.categories.length === 0 ? (
+                      <p className="text-sm text-stone-500">
+                        {content.searchNoResults}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </section>
 
             <main className="flex flex-col gap-12 pb-12">
               <section

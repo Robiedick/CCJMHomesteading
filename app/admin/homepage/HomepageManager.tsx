@@ -51,6 +51,18 @@ type HomepageContentData = {
   loginInvalidCredentialsMessage: string;
   loginSuccessMessage: string;
   loginLoadingMessage: string;
+  searchTitle: string;
+  searchPlaceholder: string;
+  searchNoResults: string;
+  searchArticlesHeading: string;
+  searchCategoriesHeading: string;
+  searchFiltersLabel: string;
+  searchFilterArticlesLabel: string;
+  searchFilterCategoriesLabel: string;
+  searchClearLabel: string;
+  searchButtonLabel: string;
+  searchResultsHeadingTemplate: string;
+  searchMinimumCharactersMessage: string;
   footerNote: string;
   footerSignature: string;
 };
@@ -191,6 +203,37 @@ const GROUPS: { title: string; fields: FieldDefinition[] }[] = [
       {
         key: "loginLoadingMessage",
         label: "Login form loading message",
+        textarea: true,
+        rows: 2,
+      },
+    ],
+  },
+  {
+    title: "Search",
+    fields: [
+      { key: "searchTitle", label: "Search section title" },
+      { key: "searchPlaceholder", label: "Search input placeholder" },
+      {
+        key: "searchNoResults",
+        label: "No results message",
+        textarea: true,
+        rows: 3,
+      },
+      { key: "searchArticlesHeading", label: "Articles heading" },
+      { key: "searchCategoriesHeading", label: "Categories heading" },
+      { key: "searchFiltersLabel", label: "Filters label" },
+      { key: "searchFilterArticlesLabel", label: "Articles filter label" },
+      { key: "searchFilterCategoriesLabel", label: "Categories filter label" },
+      { key: "searchClearLabel", label: "Clear search label" },
+      { key: "searchButtonLabel", label: "Search button label" },
+      {
+        key: "searchResultsHeadingTemplate",
+        label: "Results heading template",
+        description: "Use {{query}} as a placeholder for the search term.",
+      },
+      {
+        key: "searchMinimumCharactersMessage",
+        label: "Minimum characters helper",
         textarea: true,
         rows: 2,
       },

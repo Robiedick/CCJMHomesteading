@@ -7,6 +7,7 @@ import { DEFAULT_LOCALE } from "@/lib/i18n";
 
 const links = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/search", label: "Search" },
   { href: "/admin/articles", label: "Articles" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/users", label: "Users" },
@@ -56,6 +57,23 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 </Link>
               ))}
             </nav>
+            <form action="/admin/search" method="get" className="rounded-lg border border-stone-200 bg-stone-50/80 p-3">
+              <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">
+                Quick search
+                <input
+                  type="search"
+                  name="q"
+                  placeholder="Find anything…"
+                  className="mt-1 rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                />
+              </label>
+              <button
+                type="submit"
+                className="mt-3 w-full rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                Search
+              </button>
+            </form>
           </div>
           <div className="flex flex-col gap-2 text-sm">
             <Link

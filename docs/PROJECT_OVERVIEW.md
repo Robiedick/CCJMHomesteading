@@ -7,7 +7,8 @@ CCJM Homesteading is a bilingual (English/Dutch) content platform where a small 
 - publish, edit, and delete articles with Markdown support
 - manage categories and their colors/descriptions
 - invite additional users by single-use signup links
-- adjust the entire homepage copy per locale without code changes
+- adjust every piece of public-facing copy and imagery per locale without code changes
+- run full-text search across stories, categories, users, and invitations with smart filters
 
 The app is built with **Next.js 15** (App Router, Turbopack, server components) and uses **Prisma** to connect to **PostgreSQL** (Render) or **SQLite** (development). Authentication flows through **NextAuth** with username/password credentials seeded for the main admins.
 
@@ -19,7 +20,7 @@ The app is built with **Next.js 15** (App Router, Turbopack, server components) 
 | Styling | Tailwind CSS 4 via `@tailwindcss/postcss` | Global styles in `app/globals.css`; utility-heavy markup for quick iteration. |
 | ORM | Prisma 6 | Schema in `prisma/schema.prisma`; migrations under `prisma/migrations`. |
 | Auth | NextAuth (credentials) | Sessions stored via JWT; two seeded admins (`Robiedick`, `Corina`). |
-| Database | PostgreSQL (Render) / SQLite (local) | Prisma datasource toggled by `DATABASE_URL`. |
+| Database | PostgreSQL (Render) / SQLite (local) | Prisma datasource toggled by `DATABASE_URL`; Postgres full-text search + `pg_trgm` indexes for queries. |
 | Content rendering | `react-markdown` | Custom component mappings for Markdown headings, lists, code blocks, etc. |
 | UI helpers | `clsx`, built-in React hooks | Layout, conditional class merging, navigation. |
 
@@ -38,6 +39,7 @@ docs/
   PROJECT_OVERVIEW.md      – you are here
 lib/
   auth.ts / homepage.ts    – NextAuth config, Prisma helpers for homepage copy
+  search.ts               – Postgres full-text & trigram powered search helpers
   prisma.ts                – Prisma client singleton
   utils.ts                 – slug, date formatting helpers
   i18n.ts                  – lazy-loaded dictionaries, locale helpers
@@ -58,7 +60,11 @@ scripts/
 - **Invitation**: single-use token with optional email, role assignment, timestamps for creation/usage, and relations to both the creator and the eventual `User`.
 - **Category**: name + slug + optional color/description. Many-to-many with `Article`.
 - **Article**: Markdown content, slug, publish status/timestamps, relations to `Category`.
-- **HomepageContent**: per-locale overrides for every string on the homepage (navigation, hero, topics, stories, footer copy). If absent, defaults fall back to the translation dictionaries.
+- **HomepageContent**: per-locale overrides for all public-site copy and imagery (branding, navigation, hero, topics, stories, article/category labels, login UI, search strings, footer). If absent, defaults fall back to the translation dictionaries.
+
+Supporting indexes/extensions:
+- `pg_trgm` extension for fuzzy matching on usernames & invitations.
+- Expression-based GIN indexes on Article/Category text for full-text search.
 
 All migrations are committed (see `prisma/migrations/*`). Because we now target PostgreSQL in production, the datasource provider is `postgresql`; local development must point `DATABASE_URL` to a Postgres instance (can be the Render external connection string or a local container).
 
@@ -94,7 +100,7 @@ All mutating routes call `requireAdminSession()` to enforce admin access.
 ## 7. Admin Interface
 
 ### Layout
-- Side navigation (left column) lists: Overview, Articles, Categories, Users, Change homepage.
+- Side navigation (left column) lists: Overview, Search, Articles, Categories, Users, Change homepage.
 - Top navigation collapsed for small screens; larger screens show the new vertical layout.
 - Header displays signed-in username, links to view the public site, and a logout button.
 
@@ -112,8 +118,11 @@ All mutating routes call `requireAdminSession()` to enforce admin access.
    - Generate invitation links, copy to clipboard, track status (active/used/expired).
 5. **Change homepage** (`app/admin/homepage/*`)
    - Locale tabs (EN/NL).
-   - Editable inputs for every homepage string (navigation, hero, topics, stories, footer).
+   - Editable inputs for every public string plus logo & hero image URLs (branding, navigation, hero, topics, stories, article/category labels, login UI, search UI, footer).
    - "Load defaults" and "Remove saved copy" buttons reset to dictionary values or delete stored overrides.
+6. **Search** (`app/admin/search/page.tsx`)
+   - Unified search across articles, categories, users, and invitations.
+   - Powered by Postgres full-text search with trigram fallbacks for fuzzy matches.
 
 All admin pages export `dynamic = "force-dynamic"` so they always render fresh data and avoid static prerendering issues.
 
@@ -123,7 +132,8 @@ All admin pages export `dynamic = "force-dynamic"` so they always render fresh d
 - `app/[locale]/page.tsx` fetches:
   - published articles with categories,
   - categories with published article counts,
-  - homepage copy for the locale (database override or dictionary fallback).
+  - complete locale-specific site copy, imagery, and search messaging (database override or dictionary fallback).
+- Homepage search uses Postgres full-text search with optional filters to target stories or categories.
 - Markdown-rich article pages using `react-markdown` with custom components for headings/lists/code.
 - Category pages show published articles within that category; fallback for empty categories.
 - Footer uses `{{year}}` placeholder replaced at render time.
@@ -172,8 +182,6 @@ npm run seed
 - Prisma Studio available locally via `npm run dev` (port 5555).
 
 ## 11. Future Enhancements & Ideas
-
-- Add full-text search across articles.
 - Support rich media (images) stored on an object storage service.
 - Hook up transactional email (e.g., Resend) for invitation delivery.
 - Implement granular roles (e.g., viewer vs editor).
