@@ -81,6 +81,16 @@ export const invitationRedeemSchema = z.object({
 });
 
 export const homepageContentSchema = z.object({
+  siteName: z.string().min(1),
+  siteAdminTitle: z.string().min(1),
+  siteAdminSubtitle: z.string().min(1),
+  siteBackToHomeLabel: z.string().min(1),
+  siteLogoUrl: z
+    .union([z.literal(""), z.string().url("Please provide a valid URL")])
+    .transform((value) => value ?? ""),
+  heroImageUrl: z
+    .union([z.literal(""), z.string().url("Please provide a valid URL")])
+    .transform((value) => value ?? ""),
   navTagline: z.string().min(1),
   navLatestStoriesLabel: z.string().min(1),
   navSignInLabel: z.string().min(1),
@@ -107,6 +117,21 @@ export const homepageContentSchema = z.object({
   storiesCountPlural: z.string().min(1),
   storiesReadMore: z.string().min(1),
   storiesUncategorized: z.string().min(1),
+  articleBackLabel: z.string().min(1),
+  articleUpdatedLabel: z.string().min(1),
+  articlePublishedLabel: z.string().min(1),
+  categoryHeaderLabel: z.string().min(1),
+  categoryEmptyLabel: z.string().min(1),
+  loginUsernameLabel: z.string().min(1),
+  loginUsernamePlaceholder: z.string().min(1),
+  loginPasswordLabel: z.string().min(1),
+  loginPasswordPlaceholder: z.string().min(1),
+  loginSignInButtonLabel: z.string().min(1),
+  loginSigningInLabel: z.string().min(1),
+  loginSessionExpiredMessage: z.string().min(1),
+  loginInvalidCredentialsMessage: z.string().min(1),
+  loginSuccessMessage: z.string().min(1),
+  loginLoadingMessage: z.string().min(1),
   footerNote: z.string().min(1),
   footerSignature: z.string().min(1),
 });

@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
-import { getDictionary, locales, type Locale } from "@/lib/i18n";
+import { locales, type Locale } from "@/lib/i18n";
+import { getHomepageContent } from "@/lib/homepage";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 
 type HomePageProps = {
@@ -17,7 +19,7 @@ export default async function HomePage({ params }: HomePageProps) {
     notFound();
   }
 
-  const dictionary = await getDictionary(locale);
+  const content = await getHomepageContent(locale);
 
   const [articles, categories] = await Promise.all([
     prisma.article.findMany({
@@ -38,11 +40,11 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const storyCountLabel =
     articles.length === 1
-      ? dictionary.stories.countSingular
-      : dictionary.stories.countPlural;
+      ? content.storiesCountSingular
+      : content.storiesCountPlural;
 
-  const topicsCountSingular = dictionary.topics.countSingular;
-  const topicsCountPlural = dictionary.topics.countPlural;
+  const topicsCountSingular = content.topicsCountSingular;
+  const topicsCountPlural = content.topicsCountPlural;
 
   return (
     <div className="relative min-h-screen text-stone-900">
@@ -50,30 +52,42 @@ export default async function HomePage({ params }: HomePageProps) {
       <div className="relative">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-10 lg:flex-row">
           <aside className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-lg shadow-emerald-100/40 backdrop-blur lg:sticky lg:top-12 lg:h-fit lg:w-72">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
-              CCJM Homesteading
-            </p>
-            <p className="mt-2 text-sm text-stone-500">{dictionary.nav.tagline}</p>
+            <div>
+              {content.siteLogoUrl ? (
+                <Image
+                  src={content.siteLogoUrl}
+                  alt={content.siteName}
+                  width={64}
+                  height={64}
+                  className="h-12 w-12 rounded-xl shadow-sm"
+                  unoptimized
+                />
+              ) : null}
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
+                {content.siteName}
+              </p>
+              <p className="mt-2 text-sm text-stone-500">{content.navTagline}</p>
+            </div>
             <nav className="mt-6 flex flex-col gap-3 text-sm">
               <LocaleSwitcher
                 currentLocale={locale}
                 labels={{
-                  label: dictionary.switcher.label,
-                  english: dictionary.switcher.english,
-                  dutch: dictionary.switcher.dutch,
+                  label: content.switcherLabel,
+                  english: content.switcherEnglishLabel,
+                  dutch: content.switcherDutchLabel,
                 }}
               />
               <Link
                 href={`/${locale}#stories`}
                 className="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-white/80 px-4 py-2 font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-white"
               >
-                {dictionary.nav.latestStories}
+                {content.navLatestStoriesLabel}
               </Link>
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
               >
-                {dictionary.nav.signIn}
+                {content.navSignInLabel}
               </Link>
             </nav>
           </aside>
@@ -81,37 +95,51 @@ export default async function HomePage({ params }: HomePageProps) {
             <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/85 p-10 shadow-xl shadow-emerald-100/40 backdrop-blur lg:grid-cols-[1.7fr_1fr] lg:p-12">
               <div>
                 <h1 className="text-4xl font-semibold leading-tight text-stone-900 sm:text-5xl">
-                  {dictionary.hero.title}
+                  {content.heroTitle}
                 </h1>
                 <p className="mt-6 text-lg text-stone-600">
-                  {dictionary.hero.description}
+                  {content.heroDescription}
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
                     href={`/${locale}#stories`}
                     className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/50 transition hover:bg-emerald-700"
                   >
-                    {dictionary.hero.ctaPrimary}
+                    {content.heroCtaPrimaryLabel}
                   </Link>
                   <Link
                     href={`/${locale}#topics`}
                     className="rounded-full border border-stone-300 bg-white/70 px-6 py-3 text-sm font-semibold text-stone-700 transition hover:border-emerald-200 hover:text-emerald-700"
                   >
-                    {dictionary.hero.ctaSecondary}
+                    {content.heroCtaSecondaryLabel}
                   </Link>
                 </div>
               </div>
-              <div className="rounded-3xl border border-emerald-200/70 bg-emerald-50/70 p-8 text-sm text-stone-700 shadow-lg shadow-emerald-100/60">
-                <p className="text-emerald-700">{dictionary.hero.editorTitle}</p>
-                <p className="mt-3 leading-relaxed text-stone-600">
-                  {dictionary.hero.editorDescription}
-                </p>
-                <Link
-                  href="/admin"
-                  className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-white/80 px-5 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-400 hover:text-emerald-800"
-                >
-                  {dictionary.hero.editorLink}
-                </Link>
+              <div className="flex flex-col gap-6">
+                {content.heroImageUrl ? (
+                  <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/60 shadow-xl shadow-emerald-100/40">
+                    <Image
+                      src={content.heroImageUrl}
+                      alt={content.siteName}
+                      width={640}
+                      height={480}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
+                <div className="rounded-3xl border border-emerald-200/70 bg-emerald-50/70 p-8 text-sm text-stone-700 shadow-lg shadow-emerald-100/60">
+                  <p className="text-emerald-700">{content.heroEditorTitle}</p>
+                  <p className="mt-3 leading-relaxed text-stone-600">
+                    {content.heroEditorDescription}
+                  </p>
+                  <Link
+                    href="/admin"
+                    className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-white/80 px-5 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-400 hover:text-emerald-800"
+                  >
+                    {content.heroEditorLinkLabel}
+                  </Link>
+                </div>
               </div>
             </header>
 
@@ -123,17 +151,17 @@ export default async function HomePage({ params }: HomePageProps) {
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="text-2xl font-semibold text-stone-900">
-                      {dictionary.topics.title}
+                      {content.topicsTitle}
                     </h2>
                     <p className="mt-2 max-w-xl text-sm text-stone-600">
-                      {dictionary.topics.description}
+                      {content.topicsDescription}
                     </p>
                   </div>
                 </div>
                 <div className="mt-8 flex flex-wrap gap-3">
                   {categories.length === 0 ? (
                     <p className="rounded-2xl border border-dashed border-stone-300 bg-white/70 px-4 py-3 text-sm text-stone-500">
-                      {dictionary.topics.empty}
+                      {content.topicsEmpty}
                     </p>
                   ) : (
                     categories.map((category) => (
@@ -168,19 +196,19 @@ export default async function HomePage({ params }: HomePageProps) {
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-2xl font-semibold text-stone-900">
-                      {dictionary.stories.title}
+                      {content.storiesTitle}
                     </h2>
                     <p className="mt-2 text-sm text-stone-600">
-                      {dictionary.stories.description}
+                      {content.storiesDescription}
                     </p>
                   </div>
                   <p className="text-sm font-medium text-stone-500">
-                    {articles.length} {dictionary.stories.countLabel} {storyCountLabel}
+                    {articles.length} {content.storiesCountLabel} {storyCountLabel}
                   </p>
                 </div>
                 {articles.length === 0 ? (
                   <div className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white/70 p-10 text-center">
-                    <p className="text-sm text-stone-500">{dictionary.stories.empty}</p>
+                    <p className="text-sm text-stone-500">{content.storiesEmpty}</p>
                   </div>
                 ) : (
                   <div className="mt-8 grid gap-6 md:grid-cols-2">
@@ -195,7 +223,7 @@ export default async function HomePage({ params }: HomePageProps) {
                               ? article.categories
                                   .map((category) => category.name)
                                   .join(" · ")
-                              : dictionary.stories.uncategorized}
+                              : content.storiesUncategorized}
                           </div>
                           <h3 className="text-2xl font-semibold text-stone-900 transition group-hover:text-emerald-700">
                             {article.title}
@@ -215,7 +243,7 @@ export default async function HomePage({ params }: HomePageProps) {
                             href={`/${locale}/articles/${article.slug}`}
                             className="font-semibold text-emerald-600 transition hover:text-emerald-700"
                           >
-                            {dictionary.stories.readMore}
+                            {content.storiesReadMore}
                           </Link>
                         </div>
                       </article>
@@ -229,8 +257,8 @@ export default async function HomePage({ params }: HomePageProps) {
 
         <footer className="border-t border-white/60 bg-white/75 py-6 backdrop-blur">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 text-sm text-stone-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>{dictionary.footer.note.replace("{{year}}", `${new Date().getFullYear()}`)}</p>
-            <p className="text-stone-400">{dictionary.footer.signature}</p>
+            <p>{content.footerNote.replace("{{year}}", `${new Date().getFullYear()}`)}</p>
+            <p className="text-stone-400">{content.footerSignature}</p>
           </div>
         </footer>
       </div>

@@ -4,18 +4,30 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-export default function LoginForm() {
+type LoginFormCopy = {
+  usernameLabel: string;
+  usernamePlaceholder: string;
+  passwordLabel: string;
+  passwordPlaceholder: string;
+  signInButtonLabel: string;
+  signingInLabel: string;
+  sessionExpiredMessage: string;
+  invalidCredentialsMessage: string;
+  successMessage: string;
+};
+
+export default function LoginForm({ copy }: { copy: LoginFormCopy }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackError = searchParams.get("error");
   const initialSuccess = searchParams.get("registered")
-    ? "Account created. You can sign in now."
+    ? copy.successMessage
     : null;
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
-    callbackError ? "Your session has expired. Please sign in again." : null,
+    callbackError ? copy.sessionExpiredMessage : null,
   );
   const [success, setSuccess] = useState<string | null>(initialSuccess);
   const [loading, setLoading] = useState(false);
@@ -35,7 +47,7 @@ export default function LoginForm() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid username or password.");
+      setError(copy.invalidCredentialsMessage);
       return;
     }
 
@@ -50,7 +62,7 @@ export default function LoginForm() {
     >
       <div className="space-y-1">
         <label className="text-sm font-medium text-stone-700" htmlFor="username">
-          Username
+          {copy.usernameLabel}
         </label>
         <input
           id="username"
@@ -59,12 +71,12 @@ export default function LoginForm() {
           onChange={(event) => setUsername(event.target.value)}
           autoComplete="username"
           className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          placeholder="Enter your username"
+          placeholder={copy.usernamePlaceholder}
         />
       </div>
       <div className="mt-4 space-y-1">
         <label className="text-sm font-medium text-stone-700" htmlFor="password">
-          Password
+          {copy.passwordLabel}
         </label>
         <input
           id="password"
@@ -74,7 +86,7 @@ export default function LoginForm() {
           onChange={(event) => setPassword(event.target.value)}
           autoComplete="current-password"
           className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          placeholder="Enter your password"
+          placeholder={copy.passwordPlaceholder}
         />
       </div>
       {success && (
@@ -92,7 +104,7 @@ export default function LoginForm() {
         disabled={loading}
         className="mt-6 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Signing in..." : "Sign in"}
+        {loading ? copy.signingInLabel : copy.signInButtonLabel}
       </button>
     </form>
   );

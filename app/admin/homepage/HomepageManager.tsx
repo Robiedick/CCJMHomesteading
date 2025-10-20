@@ -4,6 +4,12 @@ import { useState, type ChangeEvent } from "react";
 import type { Locale } from "@/lib/i18n";
 
 type HomepageContentData = {
+  siteName: string;
+  siteAdminTitle: string;
+  siteAdminSubtitle: string;
+  siteBackToHomeLabel: string;
+  siteLogoUrl: string;
+  heroImageUrl: string;
   navTagline: string;
   navLatestStoriesLabel: string;
   navSignInLabel: string;
@@ -30,6 +36,21 @@ type HomepageContentData = {
   storiesCountPlural: string;
   storiesReadMore: string;
   storiesUncategorized: string;
+  articleBackLabel: string;
+  articleUpdatedLabel: string;
+  articlePublishedLabel: string;
+  categoryHeaderLabel: string;
+  categoryEmptyLabel: string;
+  loginUsernameLabel: string;
+  loginUsernamePlaceholder: string;
+  loginPasswordLabel: string;
+  loginPasswordPlaceholder: string;
+  loginSignInButtonLabel: string;
+  loginSigningInLabel: string;
+  loginSessionExpiredMessage: string;
+  loginInvalidCredentialsMessage: string;
+  loginSuccessMessage: string;
+  loginLoadingMessage: string;
   footerNote: string;
   footerSignature: string;
 };
@@ -50,6 +71,35 @@ type FieldDefinition = {
 };
 
 const GROUPS: { title: string; fields: FieldDefinition[] }[] = [
+  {
+    title: "Branding",
+    fields: [
+      { key: "siteName", label: "Site name" },
+      { key: "siteBackToHomeLabel", label: "Back-to-home link label" },
+      {
+        key: "siteAdminTitle",
+        label: "Admin login title",
+        description: "Heading shown on the admin sign-in page.",
+      },
+      {
+        key: "siteAdminSubtitle",
+        label: "Admin login subtitle",
+        description: "Short paragraph under the admin sign-in heading.",
+        textarea: true,
+        rows: 3,
+      },
+      {
+        key: "siteLogoUrl",
+        label: "Site logo image URL",
+        description: "Shown on the login page (defaults to /favicon.ico). Leave blank to hide.",
+      },
+      {
+        key: "heroImageUrl",
+        label: "Homepage hero image URL",
+        description: "Optional image displayed beside the hero content.",
+      },
+    ],
+  },
   {
     title: "Navigation",
     fields: [
@@ -94,6 +144,56 @@ const GROUPS: { title: string; fields: FieldDefinition[] }[] = [
       { key: "storiesCountPlural", label: "Plural label (e.g. “stories”)" },
       { key: "storiesReadMore", label: "Read more link label" },
       { key: "storiesUncategorized", label: "Fallback category label" },
+    ],
+  },
+  {
+    title: "Article page",
+    fields: [
+      { key: "articleBackLabel", label: "Back link label" },
+      { key: "articleUpdatedLabel", label: "“Updated” label" },
+      { key: "articlePublishedLabel", label: "“Published” label" },
+    ],
+  },
+  {
+    title: "Category page",
+    fields: [
+      { key: "categoryHeaderLabel", label: "Category header label" },
+      { key: "categoryEmptyLabel", label: "Empty state text", textarea: true, rows: 3 },
+    ],
+  },
+  {
+    title: "Login page",
+    fields: [
+      { key: "loginUsernameLabel", label: "Username label" },
+      { key: "loginUsernamePlaceholder", label: "Username placeholder" },
+      { key: "loginPasswordLabel", label: "Password label" },
+      { key: "loginPasswordPlaceholder", label: "Password placeholder" },
+      { key: "loginSignInButtonLabel", label: "Sign-in button label" },
+      { key: "loginSigningInLabel", label: "Signing-in state label" },
+      {
+        key: "loginSessionExpiredMessage",
+        label: "Session expired message",
+        textarea: true,
+        rows: 3,
+      },
+      {
+        key: "loginInvalidCredentialsMessage",
+        label: "Invalid credentials message",
+        textarea: true,
+        rows: 3,
+      },
+      {
+        key: "loginSuccessMessage",
+        label: "Account created message",
+        textarea: true,
+        rows: 3,
+      },
+      {
+        key: "loginLoadingMessage",
+        label: "Login form loading message",
+        textarea: true,
+        rows: 2,
+      },
     ],
   },
   {

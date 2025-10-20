@@ -4,7 +4,8 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import type { HTMLAttributes, ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
-import { getDictionary, locales, type Locale } from "@/lib/i18n";
+import { locales, type Locale } from "@/lib/i18n";
+import { getHomepageContent } from "@/lib/homepage";
 
 type ArticlePageProps = {
   params: { locale: Locale; slug: string };
@@ -84,7 +85,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const dictionary = await getDictionary(locale);
+  const content = await getHomepageContent(locale);
 
   const article = await prisma.article.findUnique({
     where: { slug },
@@ -103,19 +104,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             href={`/${locale}`}
             className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
           >
-            {dictionary.article.back}
+            {content.articleBackLabel}
           </Link>
           <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
             {article.categories.length > 0
               ? article.categories.map((category) => category.name).join(" · ")
-              : dictionary.stories.uncategorized}
+              : content.storiesUncategorized}
           </div>
           <h1 className="text-4xl font-semibold text-stone-900 sm:text-5xl">
             {article.title}
           </h1>
           <p className="text-sm text-stone-500">
-            {dictionary.article.updated} {formatDate(article.updatedAt, locale)} ·{" "}
-            {dictionary.article.published}{" "}
+            {content.articleUpdatedLabel} {formatDate(article.updatedAt, locale)} ·{" "}
+            {content.articlePublishedLabel}{" "}
             {formatDate(article.publishedAt ?? article.createdAt, locale)}
           </p>
         </div>

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
-import { getDictionary, locales, type Locale } from "@/lib/i18n";
+import { locales, type Locale } from "@/lib/i18n";
+import { getHomepageContent } from "@/lib/homepage";
 
 type CategoryPageProps = {
   params: { locale: Locale; slug: string };
@@ -16,7 +17,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const dictionary = await getDictionary(locale);
+  const content = await getHomepageContent(locale);
 
   const category = await prisma.category.findUnique({
     where: { slug },
@@ -41,7 +42,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             href={`/${locale}`}
             className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
           >
-            {dictionary.article.back}
+            {content.articleBackLabel}
           </Link>
           <div className="flex items-center gap-3">
             <span
@@ -49,7 +50,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               style={{ backgroundColor: category.color ?? "#65a30d" }}
             />
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">
-              {dictionary.category.headerLabel}
+              {content.categoryHeaderLabel}
             </p>
           </div>
           <h1 className="text-4xl font-semibold text-stone-900 sm:text-5xl">
@@ -64,7 +65,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
         {category.articles.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-stone-200 bg-white p-8 text-center text-sm text-stone-500">
-            {dictionary.category.empty}
+            {content.categoryEmptyLabel}
           </div>
         ) : (
           <div className="space-y-6">
@@ -99,7 +100,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                     href={`/${locale}/articles/${article.slug}`}
                     className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
                   >
-                    {dictionary.stories.readMore}
+                    {content.storiesReadMore}
                   </Link>
                 </div>
               </article>

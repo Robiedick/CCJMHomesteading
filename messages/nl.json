@@ -1,4 +1,12 @@
 {
+  "brand": {
+    "siteName": "CCJM Homesteading",
+    "adminTitle": "CCJM Homesteading Beheer",
+    "adminSubtitle": "Meld je aan om artikelen, categorieën en de homepage bij te werken.",
+    "backToHome": "Terug naar de homestead",
+    "logoUrl": "/favicon.ico",
+    "heroImageUrl": ""
+  },
   "nav": {
     "tagline": "Geworteld in familie, aarde en aandachtig leven.",
     "latestStories": "Laatste verhalen",
@@ -43,6 +51,18 @@
   "category": {
     "headerLabel": "Boerderij onderwerp",
     "empty": "Nog geen verhalen in deze categorie. Kom later terug!"
+  },
+  "login": {
+    "usernameLabel": "Gebruikersnaam",
+    "usernamePlaceholder": "Voer je gebruikersnaam in",
+    "passwordLabel": "Wachtwoord",
+    "passwordPlaceholder": "Voer je wachtwoord in",
+    "signInButton": "Inloggen",
+    "signingIn": "Bezig met inloggen...",
+    "sessionExpired": "Je sessie is verlopen. Log opnieuw in.",
+    "invalidCredentials": "Ongeldige gebruikersnaam of wachtwoord.",
+    "success": "Account aangemaakt. Je kunt nu inloggen.",
+    "loading": "Formulier laden…"
   },
   "footer": {
     "note": "© {{year}} CCJM Homesteading. Alle rechten voorbehouden.",

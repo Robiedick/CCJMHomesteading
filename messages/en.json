@@ -1,4 +1,12 @@
 {
+  "brand": {
+    "siteName": "CCJM Homesteading",
+    "adminTitle": "CCJM Homesteading Admin",
+    "adminSubtitle": "Sign in to manage articles, categories, and homepage copy.",
+    "backToHome": "Back to homestead",
+    "logoUrl": "/favicon.ico",
+    "heroImageUrl": ""
+  },
   "nav": {
     "tagline": "Rooted in family, soil, and thoughtful living.",
     "latestStories": "Latest stories",
@@ -43,6 +51,18 @@
   "category": {
     "headerLabel": "Homestead topic",
     "empty": "No published articles in this category yet. Check back soon!"
+  },
+  "login": {
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signInButton": "Sign in",
+    "signingIn": "Signing in...",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "invalidCredentials": "Invalid username or password.",
+    "success": "Account created. You can sign in now.",
+    "loading": "Loading form…"
   },
   "footer": {
     "note": "© {{year}} CCJM Homesteading. All rights reserved.",

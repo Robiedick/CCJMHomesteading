@@ -68,6 +68,12 @@ model Invitation {
 model HomepageContent {
   id                       Int      @id @default(autoincrement())
   locale                   String   @unique
+  siteName                 String   @default("")
+  siteAdminTitle           String   @default("")
+  siteAdminSubtitle        String   @default("")
+  siteBackToHomeLabel      String   @default("")
+  siteLogoUrl              String   @default("")
+  heroImageUrl             String   @default("")
   navTagline               String
   navLatestStoriesLabel    String
   navSignInLabel           String
@@ -94,6 +100,21 @@ model HomepageContent {
   storiesCountPlural       String
   storiesReadMore          String
   storiesUncategorized     String
+  articleBackLabel         String   @default("")
+  articleUpdatedLabel      String   @default("")
+  articlePublishedLabel    String   @default("")
+  categoryHeaderLabel      String   @default("")
+  categoryEmptyLabel       String   @default("")
+  loginUsernameLabel       String   @default("")
+  loginUsernamePlaceholder String   @default("")
+  loginPasswordLabel       String   @default("")
+  loginPasswordPlaceholder String   @default("")
+  loginSignInButtonLabel   String   @default("")
+  loginSigningInLabel      String   @default("")
+  loginSessionExpiredMessage String @default("")
+  loginInvalidCredentialsMessage String @default("")
+  loginSuccessMessage      String   @default("")
+  loginLoadingMessage      String   @default("")
   footerNote               String
   footerSignature          String
   createdAt                DateTime @default(now())

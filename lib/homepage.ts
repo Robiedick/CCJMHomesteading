@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { getDictionary, locales, type Locale } from "@/lib/i18n";
 
 export type HomepageContentData = {
+  siteName: string;
+  siteAdminTitle: string;
+  siteAdminSubtitle: string;
+  siteBackToHomeLabel: string;
+  siteLogoUrl: string;
+  heroImageUrl: string;
   navTagline: string;
   navLatestStoriesLabel: string;
   navSignInLabel: string;
@@ -29,6 +35,21 @@ export type HomepageContentData = {
   storiesCountPlural: string;
   storiesReadMore: string;
   storiesUncategorized: string;
+  articleBackLabel: string;
+  articleUpdatedLabel: string;
+  articlePublishedLabel: string;
+  categoryHeaderLabel: string;
+  categoryEmptyLabel: string;
+  loginUsernameLabel: string;
+  loginUsernamePlaceholder: string;
+  loginPasswordLabel: string;
+  loginPasswordPlaceholder: string;
+  loginSignInButtonLabel: string;
+  loginSigningInLabel: string;
+  loginSessionExpiredMessage: string;
+  loginInvalidCredentialsMessage: string;
+  loginSuccessMessage: string;
+  loginLoadingMessage: string;
   footerNote: string;
   footerSignature: string;
 };
@@ -72,6 +93,14 @@ export function isSupportedLocale(value: string): value is Locale {
 export async function getDefaultHomepageContent(locale: Locale): Promise<HomepageContentData> {
   const dictionary = await getDictionary(locale);
   return {
+    siteName: dictionary.brand?.siteName ?? "CCJM Homesteading",
+    siteAdminTitle: dictionary.brand?.adminTitle ?? "CCJM Homesteading Admin",
+    siteAdminSubtitle:
+      dictionary.brand?.adminSubtitle ??
+      "Sign in to manage articles, categories, and homepage copy.",
+    siteBackToHomeLabel: dictionary.brand?.backToHome ?? "Back to homestead",
+    siteLogoUrl: dictionary.brand?.logoUrl ?? "/favicon.ico",
+    heroImageUrl: dictionary.brand?.heroImageUrl ?? "",
     navTagline: dictionary.nav.tagline,
     navLatestStoriesLabel: dictionary.nav.latestStories,
     navSignInLabel: dictionary.nav.signIn,
@@ -98,6 +127,25 @@ export async function getDefaultHomepageContent(locale: Locale): Promise<Homepag
     storiesCountPlural: dictionary.stories.countPlural,
     storiesReadMore: dictionary.stories.readMore,
     storiesUncategorized: dictionary.stories.uncategorized,
+    articleBackLabel: dictionary.article.back,
+    articleUpdatedLabel: dictionary.article.updated,
+    articlePublishedLabel: dictionary.article.published,
+    categoryHeaderLabel: dictionary.category.headerLabel,
+    categoryEmptyLabel: dictionary.category.empty,
+    loginUsernameLabel: dictionary.login?.usernameLabel ?? "Username",
+    loginUsernamePlaceholder: dictionary.login?.usernamePlaceholder ?? "Enter your username",
+    loginPasswordLabel: dictionary.login?.passwordLabel ?? "Password",
+    loginPasswordPlaceholder: dictionary.login?.passwordPlaceholder ?? "Enter your password",
+    loginSignInButtonLabel: dictionary.login?.signInButton ?? "Sign in",
+    loginSigningInLabel: dictionary.login?.signingIn ?? "Signing in...",
+    loginSessionExpiredMessage:
+      dictionary.login?.sessionExpired ?? "Your session has expired. Please sign in again.",
+    loginInvalidCredentialsMessage:
+      dictionary.login?.invalidCredentials ?? "Invalid username or password.",
+    loginSuccessMessage:
+      dictionary.login?.success ??
+      "Account created. You can sign in now.",
+    loginLoadingMessage: dictionary.login?.loading ?? "Loading form…",
     footerNote: dictionary.footer.note,
     footerSignature: dictionary.footer.signature,
   };
@@ -105,6 +153,12 @@ export async function getDefaultHomepageContent(locale: Locale): Promise<Homepag
 
 export function mapDataToUpdateInput(data: HomepageContentData): Omit<HomepageContent, "id" | "createdAt" | "updatedAt" | "locale"> {
   return {
+    siteName: data.siteName,
+    siteAdminTitle: data.siteAdminTitle,
+    siteAdminSubtitle: data.siteAdminSubtitle,
+    siteBackToHomeLabel: data.siteBackToHomeLabel,
+    siteLogoUrl: data.siteLogoUrl,
+    heroImageUrl: data.heroImageUrl,
     navTagline: data.navTagline,
     navLatestStoriesLabel: data.navLatestStoriesLabel,
     navSignInLabel: data.navSignInLabel,
@@ -131,6 +185,21 @@ export function mapDataToUpdateInput(data: HomepageContentData): Omit<HomepageCo
     storiesCountPlural: data.storiesCountPlural,
     storiesReadMore: data.storiesReadMore,
     storiesUncategorized: data.storiesUncategorized,
+    articleBackLabel: data.articleBackLabel,
+    articleUpdatedLabel: data.articleUpdatedLabel,
+    articlePublishedLabel: data.articlePublishedLabel,
+    categoryHeaderLabel: data.categoryHeaderLabel,
+    categoryEmptyLabel: data.categoryEmptyLabel,
+    loginUsernameLabel: data.loginUsernameLabel,
+    loginUsernamePlaceholder: data.loginUsernamePlaceholder,
+    loginPasswordLabel: data.loginPasswordLabel,
+    loginPasswordPlaceholder: data.loginPasswordPlaceholder,
+    loginSignInButtonLabel: data.loginSignInButtonLabel,
+    loginSigningInLabel: data.loginSigningInLabel,
+    loginSessionExpiredMessage: data.loginSessionExpiredMessage,
+    loginInvalidCredentialsMessage: data.loginInvalidCredentialsMessage,
+    loginSuccessMessage: data.loginSuccessMessage,
+    loginLoadingMessage: data.loginLoadingMessage,
     footerNote: data.footerNote,
     footerSignature: data.footerSignature,
   };
@@ -138,6 +207,12 @@ export function mapDataToUpdateInput(data: HomepageContentData): Omit<HomepageCo
 
 function mapRecordToData(record: HomepageContent): HomepageContentData {
   return {
+    siteName: record.siteName,
+    siteAdminTitle: record.siteAdminTitle,
+    siteAdminSubtitle: record.siteAdminSubtitle,
+    siteBackToHomeLabel: record.siteBackToHomeLabel,
+    siteLogoUrl: record.siteLogoUrl,
+    heroImageUrl: record.heroImageUrl,
     navTagline: record.navTagline,
     navLatestStoriesLabel: record.navLatestStoriesLabel,
     navSignInLabel: record.navSignInLabel,
@@ -164,6 +239,21 @@ function mapRecordToData(record: HomepageContent): HomepageContentData {
     storiesCountPlural: record.storiesCountPlural,
     storiesReadMore: record.storiesReadMore,
     storiesUncategorized: record.storiesUncategorized,
+    articleBackLabel: record.articleBackLabel,
+    articleUpdatedLabel: record.articleUpdatedLabel,
+    articlePublishedLabel: record.articlePublishedLabel,
+    categoryHeaderLabel: record.categoryHeaderLabel,
+    categoryEmptyLabel: record.categoryEmptyLabel,
+    loginUsernameLabel: record.loginUsernameLabel,
+    loginUsernamePlaceholder: record.loginUsernamePlaceholder,
+    loginPasswordLabel: record.loginPasswordLabel,
+    loginPasswordPlaceholder: record.loginPasswordPlaceholder,
+    loginSignInButtonLabel: record.loginSignInButtonLabel,
+    loginSigningInLabel: record.loginSigningInLabel,
+    loginSessionExpiredMessage: record.loginSessionExpiredMessage,
+    loginInvalidCredentialsMessage: record.loginInvalidCredentialsMessage,
+    loginSuccessMessage: record.loginSuccessMessage,
+    loginLoadingMessage: record.loginLoadingMessage,
     footerNote: record.footerNote,
     footerSignature: record.footerSignature,
   };
