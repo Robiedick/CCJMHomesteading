@@ -49,7 +49,7 @@ export async function PUT(request: Request) {
     }
 
     const data = mapDataToUpdateInput(parsed.data);
-    const record = await prisma.homepageContent.upsert({
+    await prisma.homepageContent.upsert({
       where: { locale },
       create: {
         locale,

@@ -23,7 +23,12 @@ function isActivePath(currentPath: string, href: string) {
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await getServerAuthSession();
   const username = session?.user?.name ?? "Admin";
-  const pathname = headers().get("x-invoke-path") ?? "";
+  const headerList = await headers();
+  const pathname =
+    headerList.get("x-invoke-path") ??
+    headerList.get("x-next-pathname") ??
+    headerList.get("x-pathname") ??
+    "";
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900">
