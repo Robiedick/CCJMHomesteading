@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/auth";
@@ -14,7 +15,7 @@ const createPresetSchema = z.object({
   data: homepageContentSchema,
 });
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   await requireAdminSession();
 
   const url = new URL(request.url);
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   await requireAdminSession();
 
   try {

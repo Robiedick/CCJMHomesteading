@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +8,7 @@ type RouteContext = {
   params: { id: string };
 };
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   await requireAdminSession();
 
   const presetId = Number.parseInt(params.id, 10);
