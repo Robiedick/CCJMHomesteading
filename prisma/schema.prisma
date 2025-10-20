@@ -132,3 +132,15 @@ model HomepageContent {
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 }
+
+model HomepagePreset {
+  id        Int      @id @default(autoincrement())
+  locale    String
+  name      String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locale])
+  @@unique([locale, name])
+}

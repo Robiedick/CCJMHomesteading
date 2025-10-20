@@ -67,11 +67,19 @@ type HomepageContentData = {
   footerSignature: string;
 };
 
+type HomepagePresetSummary = {
+  id: number;
+  name: string;
+  updatedAt: string;
+  data: HomepageContentData;
+};
+
 type LocaleState = {
   locale: Locale;
   data: HomepageContentData;
   defaults: HomepageContentData;
   source: "database" | "default";
+  presets: HomepagePresetSummary[];
 };
 
 type FieldDefinition = {
@@ -270,8 +278,18 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
     locales.map(({ locale, source }) => [locale, source]),
   ) as Record<Locale, LocaleState["source"]>;
 
+  const initialPresets = Object.fromEntries(
+    locales.map(({ locale, presets }) => [locale, presets.map((preset) => ({ ...preset }))]),
+  ) as Record<Locale, HomepagePresetSummary[]>;
+
+  const [sourceMap, setSourceMap] = useState(sources);
   const [activeLocale, setActiveLocale] = useState<Locale>(locales[0]?.locale ?? "en");
   const [forms, setForms] = useState(initialForms);
+  const [presetLists, setPresetLists] = useState(initialPresets);
+  const [selectedPresetIds, setSelectedPresetIds] = useState<Record<Locale, string>>(
+    () =>
+      Object.fromEntries(locales.map(({ locale }) => [locale, ""])) as Record<Locale, string>,
+  );
   const [status, setStatus] = useState<Record<Locale, { saving: boolean; message: string | null; error: string | null }>>(
     () =>
       Object.fromEntries(
@@ -316,6 +334,7 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
         ...prev,
         [locale]: { saving: false, message: "Saved!", error: null },
       }));
+      setSourceMap((prev) => ({ ...prev, [locale]: "database" }));
     } catch (error) {
       setStatus((prev) => ({
         ...prev,
@@ -326,6 +345,13 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
         },
       }));
     }
+  }
+
+  function selectPreset(locale: Locale, presetId: string) {
+    setSelectedPresetIds((prev) => ({
+      ...prev,
+      [locale]: presetId,
+    }));
   }
 
   async function resetLocale(locale: Locale) {
@@ -361,6 +387,7 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
           error: null,
         },
       }));
+      setSourceMap((prev) => ({ ...prev, [locale]: "default" }));
     } catch (error) {
       setStatus((prev) => ({
         ...prev,
@@ -373,9 +400,122 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
     }
   }
 
+  async function savePreset(locale: Locale) {
+    const nameInput = window.prompt("Save configuration as…");
+    if (!nameInput) {
+      return;
+    }
+    const name = nameInput.trim();
+    if (name.length === 0) {
+      return;
+    }
+
+    setStatus((prev) => ({
+      ...prev,
+      [locale]: { saving: true, message: null, error: null },
+    }));
+
+    try {
+      const response = await fetch("/api/homepage/presets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale, name, data: forms[locale] }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message ?? "Unable to save preset.");
+      }
+
+      const payload = (await response.json()) as {
+        preset: HomepagePresetSummary;
+      };
+
+      setPresetLists((prev) => {
+        const next = prev[locale].filter((preset) => preset.id !== payload.preset.id);
+        next.unshift(payload.preset);
+        return { ...prev, [locale]: next };
+      });
+      setSelectedPresetIds((prev) => ({
+        ...prev,
+        [locale]: String(payload.preset.id),
+      }));
+      setStatus((prev) => ({
+        ...prev,
+        [locale]: { saving: false, message: "Preset saved.", error: null },
+      }));
+    } catch (error) {
+      setStatus((prev) => ({
+        ...prev,
+        [locale]: {
+          saving: false,
+          message: null,
+          error: error instanceof Error ? error.message : "Unable to save preset.",
+        },
+      }));
+    }
+  }
+
+  function loadPreset(locale: Locale) {
+    const presetId = selectedPresetIds[locale];
+    if (!presetId) return;
+    const preset = presetLists[locale].find((item) => String(item.id) === presetId);
+    if (!preset) return;
+    setForms((prev) => ({
+      ...prev,
+      [locale]: { ...preset.data },
+    }));
+    setStatus((prev) => ({
+      ...prev,
+      [locale]: { saving: false, message: `Loaded “${preset.name}” (remember to save)`, error: null },
+    }));
+  }
+
+  async function deletePreset(locale: Locale) {
+    const presetId = selectedPresetIds[locale];
+    if (!presetId) return;
+    const preset = presetLists[locale].find((item) => String(item.id) === presetId);
+    if (!preset) return;
+    const confirmed = window.confirm(`Delete preset “${preset.name}”?`);
+    if (!confirmed) return;
+
+    setStatus((prev) => ({
+      ...prev,
+      [locale]: { saving: true, message: null, error: null },
+    }));
+
+    try {
+      const response = await fetch(`/api/homepage/presets/${presetId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message ?? "Unable to delete preset.");
+      }
+      setPresetLists((prev) => ({
+        ...prev,
+        [locale]: prev[locale].filter((item) => String(item.id) !== presetId),
+      }));
+      setSelectedPresetIds((prev) => ({ ...prev, [locale]: "" }));
+      setStatus((prev) => ({
+        ...prev,
+        [locale]: { saving: false, message: "Preset deleted.", error: null },
+      }));
+    } catch (error) {
+      setStatus((prev) => ({
+        ...prev,
+        [locale]: {
+          saving: false,
+          message: null,
+          error: error instanceof Error ? error.message : "Unable to delete preset.",
+        },
+      }));
+    }
+  }
+
   const activeForm = forms[activeLocale];
   const localeStatus = status[activeLocale];
-  const source = sources[activeLocale];
+  const source = sourceMap[activeLocale];
 
   return (
     <div className="space-y-8">
@@ -424,8 +564,59 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
               onClick={() => clearLocale(activeLocale)}
               className="rounded-lg border border-red-200 px-3 py-1.5 font-medium text-red-600 transition hover:bg-red-50"
             >
-              Remove saved copy
+              Clear saved override
             </button>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg bg-stone-50/80 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => savePreset(activeLocale)}
+                className="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50"
+              >
+                Save configuration
+              </button>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">
+                  Presets
+                </label>
+                <select
+                  value={selectedPresetIds[activeLocale] ?? ""}
+                  onChange={(event) => selectPreset(activeLocale, event.target.value)}
+                  className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                >
+                  <option value="">Select preset…</option>
+                  {presetLists[activeLocale]?.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={() => loadPreset(activeLocale)}
+                disabled={!selectedPresetIds[activeLocale]}
+                className="rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium text-stone-600 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Load preset
+              </button>
+              <button
+                type="button"
+                onClick={() => deletePreset(activeLocale)}
+                disabled={!selectedPresetIds[activeLocale]}
+                className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Delete preset
+              </button>
+            </div>
+            <p className="text-xs text-stone-500">
+              Presets let you store multiple homepage configurations per language. Loading a preset
+              updates the form — remember to save to publish it.
+            </p>
           </div>
         </div>
 

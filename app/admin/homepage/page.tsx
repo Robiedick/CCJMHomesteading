@@ -1,6 +1,6 @@
 import HomepageManager from "./HomepageManager";
 import { locales, type Locale } from "@/lib/i18n";
-import { getHomepageContentState } from "@/lib/homepage";
+import { getHomepageContentState, getHomepagePresets } from "@/lib/homepage";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +9,7 @@ type LocaleState = {
   data: Awaited<ReturnType<typeof getHomepageContentState>>["data"];
   defaults: Awaited<ReturnType<typeof getHomepageContentState>>["defaults"];
   source: Awaited<ReturnType<typeof getHomepageContentState>>["source"];
+  presets: Awaited<ReturnType<typeof getHomepagePresets>>;
 };
 
 export default async function HomepageSettingsPage() {
@@ -16,11 +17,13 @@ export default async function HomepageSettingsPage() {
 
   for (const locale of locales) {
     const state = await getHomepageContentState(locale);
+    const presets = await getHomepagePresets(locale);
     states.push({
       locale,
       data: state.data,
       defaults: state.defaults,
       source: state.source,
+      presets,
     });
   }
 

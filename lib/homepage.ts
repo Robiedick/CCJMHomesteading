@@ -1,6 +1,7 @@
 import type { HomepageContent } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, locales, type Locale } from "@/lib/i18n";
+import { homepageContentSchema } from "@/lib/validators";
 
 export type HomepageContentData = {
   siteName: string;
@@ -311,4 +312,25 @@ function mapRecordToData(record: HomepageContent): HomepageContentData {
     footerNote: record.footerNote,
     footerSignature: record.footerSignature,
   };
+}
+
+export type HomepagePresetInfo = {
+  id: number;
+  name: string;
+  data: HomepageContentData;
+  updatedAt: string;
+};
+
+export async function getHomepagePresets(locale: Locale): Promise<HomepagePresetInfo[]> {
+  const presets = await prisma.homepagePreset.findMany({
+    where: { locale },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  return presets.map((preset) => ({
+    id: preset.id,
+    name: preset.name,
+    data: homepageContentSchema.parse(preset.data),
+    updatedAt: preset.updatedAt.toISOString(),
+  }));
 }

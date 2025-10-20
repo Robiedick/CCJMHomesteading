@@ -61,6 +61,7 @@ scripts/
 - **Category**: name + slug + optional color/description. Many-to-many with `Article`.
 - **Article**: Markdown content, slug, publish status/timestamps, relations to `Category`.
 - **HomepageContent**: per-locale overrides for all public-site copy and imagery (branding, navigation, hero, topics, stories, article/category labels, login UI, search strings, footer). If absent, defaults fall back to the translation dictionaries.
+- **HomepagePreset**: named JSON snapshots that store an entire homepage configuration per locale, enabling quick swapping between saved setups.
 
 Supporting indexes/extensions:
 - `pg_trgm` extension for fuzzy matching on usernames & invitations.
@@ -94,6 +95,8 @@ All endpoints live under `app/api/*` and speak JSON.
 | `/api/invitations/[id]` | `DELETE` | Revoke unused invitations. |
 | `/api/invitations/token/[token]` | `GET`, `POST` | Validate and redeem invitation tokens (creates new User). |
 | `/api/homepage` | `GET`, `PUT`, `DELETE` | Fetch, upsert, or remove per-locale homepage copy overrides. |
+| `/api/homepage/presets` | `GET`, `POST` | List or save named homepage configurations for a locale. |
+| `/api/homepage/presets/[id]` | `DELETE` | Remove a saved homepage preset. |
 
 All mutating routes call `requireAdminSession()` to enforce admin access.
 
@@ -119,7 +122,8 @@ All mutating routes call `requireAdminSession()` to enforce admin access.
 5. **Change homepage** (`app/admin/homepage/*`)
    - Locale tabs (EN/NL).
    - Editable inputs for every public string plus logo & hero image URLs (branding, navigation, hero, topics, stories, article/category labels, login UI, search UI, footer).
-   - "Load defaults" and "Remove saved copy" buttons reset to dictionary values or delete stored overrides.
+   - Save named presets, load or delete saved configurations, restore defaults, or clear the current override entirely.
+   - "Load defaults" resets the form to translation values; "Clear saved override" deletes the stored override so the locale falls back to defaults.
 6. **Search** (`app/admin/search/page.tsx`)
    - Unified search across articles, categories, users, and invitations.
    - Powered by Postgres full-text search with trigram fallbacks for fuzzy matches.
