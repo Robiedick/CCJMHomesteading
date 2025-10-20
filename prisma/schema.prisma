@@ -64,3 +64,38 @@ model Invitation {
   consumedById Int?
   consumedBy   User?     @relation("ConsumedInvitation", fields: [consumedById], references: [id])
 }
+
+model HomepageContent {
+  id                       Int      @id @default(autoincrement())
+  locale                   String   @unique
+  navTagline               String
+  navLatestStoriesLabel    String
+  navSignInLabel           String
+  heroTitle                String
+  heroDescription          String
+  heroCtaPrimaryLabel      String
+  heroCtaSecondaryLabel    String
+  heroEditorTitle          String
+  heroEditorDescription    String
+  heroEditorLinkLabel      String
+  switcherLabel           String
+  switcherEnglishLabel    String
+  switcherDutchLabel      String
+  topicsTitle              String
+  topicsDescription        String
+  topicsEmpty              String
+  topicsCountSingular      String
+  topicsCountPlural        String
+  storiesTitle             String
+  storiesDescription       String
+  storiesEmpty             String
+  storiesCountLabel        String
+  storiesCountSingular     String
+  storiesCountPlural       String
+  storiesReadMore          String
+  storiesUncategorized     String
+  footerNote               String
+  footerSignature          String
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}

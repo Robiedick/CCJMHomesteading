@@ -80,6 +80,37 @@ export const invitationRedeemSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export const homepageContentSchema = z.object({
+  navTagline: z.string().min(1),
+  navLatestStoriesLabel: z.string().min(1),
+  navSignInLabel: z.string().min(1),
+  switcherLabel: z.string().min(1),
+  switcherEnglishLabel: z.string().min(1),
+  switcherDutchLabel: z.string().min(1),
+  heroTitle: z.string().min(1),
+  heroDescription: z.string().min(1),
+  heroCtaPrimaryLabel: z.string().min(1),
+  heroCtaSecondaryLabel: z.string().min(1),
+  heroEditorTitle: z.string().min(1),
+  heroEditorDescription: z.string().min(1),
+  heroEditorLinkLabel: z.string().min(1),
+  topicsTitle: z.string().min(1),
+  topicsDescription: z.string().min(1),
+  topicsEmpty: z.string().min(1),
+  topicsCountSingular: z.string().min(1),
+  topicsCountPlural: z.string().min(1),
+  storiesTitle: z.string().min(1),
+  storiesDescription: z.string().min(1),
+  storiesEmpty: z.string().min(1),
+  storiesCountLabel: z.string().min(1),
+  storiesCountSingular: z.string().min(1),
+  storiesCountPlural: z.string().min(1),
+  storiesReadMore: z.string().min(1),
+  storiesUncategorized: z.string().min(1),
+  footerNote: z.string().min(1),
+  footerSignature: z.string().min(1),
+});
+
 export function extractCategoryInput(formData: FormData) {
   const name = formData.get("name")?.toString().trim() ?? "";
   const slugInput = formData.get("slug")?.toString().trim();
