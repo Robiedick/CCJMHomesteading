@@ -80,11 +80,23 @@ export const invitationRedeemSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-const homepageStringField = z.string().optional().default("");
-const homepageUrlField = z
-  .union([z.literal(""), z.string().url("Please provide a valid URL")])
+const homepageStringField = z
+  .string()
   .optional()
-  .default("");
+  .transform((value) => (value ?? "").trim());
+
+const homepageUrlField = z
+  .string()
+  .optional()
+  .transform((value) => (value ?? "").trim())
+  .refine(
+    (value) =>
+      value === "" ||
+      value.startsWith("/") ||
+      /^https?:\/\//i.test(value) ||
+      value.startsWith("data:"),
+    { message: "Please provide a valid URL" },
+  );
 
 export const homepageContentSchema = z.object({
   siteName: homepageStringField,
