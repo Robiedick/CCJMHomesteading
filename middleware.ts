@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 import { withAuth } from "next-auth/middleware";
 import type { NextRequestWithAuth } from "next-auth/middleware";
 
@@ -63,11 +63,11 @@ async function resolveDefaultLocale(request: NextRequest): Promise<SupportedLoca
   return FALLBACK_LOCALE;
 }
 
-export default async function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {
-    return adminMiddleware(request as NextRequestWithAuth);
+    return adminMiddleware(request as NextRequestWithAuth, event);
   }
 
   if (
