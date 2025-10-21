@@ -1,0 +1,126 @@
+{
+  "layout": {
+    "title": "CCJM Admin",
+    "signedInAs": "Signed in as {{username}}",
+    "links": {
+      "overview": "Overview",
+      "search": "Search",
+      "articles": "Articles",
+      "categories": "Categories",
+      "users": "Users",
+      "homepage": "Change homepage"
+    },
+    "quickSearch": {
+      "label": "Quick search",
+      "placeholder": "Find anything…",
+      "button": "Search"
+    },
+    "viewSite": "View site",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "title": "Homestead Content Overview",
+    "subtitle": "Manage articles and categories for CCJM Homesteading.",
+    "stats": {
+      "articles": "Total Articles",
+      "published": "Published Articles",
+      "categories": "Categories"
+    },
+    "recent": {
+      "title": "Recently Updated Articles",
+      "cta": "Manage articles",
+      "empty": "No articles yet.",
+      "emptyLink": "Create the first one.",
+      "table": {
+        "title": "Title",
+        "status": "Status",
+        "categories": "Categories",
+        "updated": "Updated"
+      },
+      "status": {
+        "published": "Published",
+        "draft": "Draft"
+      },
+      "uncategorized": "Uncategorized"
+    }
+  },
+  "common": {
+    "optional": "(optional)"
+  },
+  "articles": {
+    "intro": {
+      "title": "New article",
+      "description": "Draft and publish homestead stories, guides, and notes. You can add photos later when you are ready.",
+      "note": "The editor opens in a draggable window so you can keep browsing your content list while writing. We’ll auto-generate the homepage summary and a unique URL for you.",
+      "button": "Write new article"
+    },
+    "existing": {
+      "title": "Existing articles",
+      "table": {
+        "title": "Title",
+        "status": "Status",
+        "categories": "Categories",
+        "updated": "Last updated",
+        "actions": "Actions"
+      },
+      "empty": "No articles yet. Use “Write new article” to publish your first story.",
+      "status": {
+        "published": "Published",
+        "draft": "Draft"
+      },
+      "uncategorized": "Uncategorized"
+    },
+    "modal": {
+      "title": "Compose new article",
+      "viewLive": "View live post",
+      "close": "Close",
+      "form": {
+        "title": "Title",
+        "titlePlaceholder": "How we built our raised garden beds",
+        "content": "Content",
+        "contentDescription": "Use the toolbar or Markdown shortcuts to format your post.",
+        "contentPlaceholder": "Write your story, include headers like ## First steps",
+        "categories": "Categories",
+        "categoriesHint": "Hold Cmd (⌘) or Ctrl to select multiple categories.",
+        "publish": "Publish immediately",
+        "publishDate": "Publish date",
+        "cancel": "Cancel",
+        "save": "Save article"
+      },
+      "loading": "Saving...",
+      "error": "Unable to create article.",
+      "success": "Article saved"
+    },
+    "messages": {
+      "createError": "Unable to create article.",
+      "deleteError": "Unable to delete article."
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "articleEditor": {
+    "title": "Edit article",
+    "subtitle": "Update content, publication status, and categories.",
+    "summary": "Homepage summaries refresh automatically when you save changes.",
+    "viewLive": "View live post",
+    "close": "Close",
+    "liveAt": "Live at",
+    "form": {
+      "title": "Title",
+      "content": "Content",
+      "contentDescription": "Use the toolbar or Markdown shortcuts to format your article.",
+      "categories": "Categories",
+      "categoriesHint": "Hold Cmd (⌘) or Ctrl to select multiple categories.",
+      "published": "Published",
+      "publishDate": "Publish date",
+      "cancel": "Cancel",
+      "save": "Save changes"
+    },
+    "loading": "Saving...",
+    "error": "Unable to update article.",
+    "success": "Article updated"
+  }
+}

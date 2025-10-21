@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Article, Category } from "@prisma/client";
 import { formatDate } from "@/lib/utils";
 import RichTextEditor from "@/components/RichTextEditor";
+import { createAdminTranslator, type AdminDictionary } from "@/lib/admin-i18n";
 
 type ArticleWithCategories = Article & { categories: Category[] };
 
@@ -31,11 +32,14 @@ const MIN_WINDOW_HEIGHT = 520;
 export default function ArticleManager({
   articles,
   categories,
+  dictionary,
 }: {
   articles: ArticleWithCategories[];
   categories: Category[];
+  dictionary: AdminDictionary;
 }) {
   const router = useRouter();
+  const t = createAdminTranslator(dictionary);
   const [form, setForm] = useState<ArticleFormState>(emptyArticleForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +109,10 @@ export default function ArticleManager({
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
+    const target = event.target as HTMLElement | null;
+    if (target && target.closest("[data-no-drag]")) {
+      return;
+    }
     dragOffsetRef.current = {
       x: event.clientX - windowPosition.x,
       y: event.clientY - windowPosition.y,
@@ -244,7 +252,7 @@ export default function ArticleManager({
               .flat()
               .at(0)
           : null;
-        setError(payload.message ?? firstFieldError ?? "Unable to create article.");
+        setError(payload.message ?? firstFieldError ?? t("articles.messages.createError"));
         return;
       }
 
@@ -252,7 +260,7 @@ export default function ArticleManager({
       closeWindow();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to create article.");
+      setError(err instanceof Error ? err.message : t("articles.messages.createError"));
     } finally {
       setSubmitting(false);
     }
@@ -268,13 +276,13 @@ export default function ArticleManager({
 
       if (!response.ok) {
         const payload = (await response.json()) as { message?: string };
-        setError(payload.message ?? "Unable to delete article.");
+        setError(payload.message ?? t("articles.messages.deleteError"));
         return;
       }
 
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to delete article.");
+      setError(err instanceof Error ? err.message : t("articles.messages.deleteError"));
     } finally {
       setDeleteLoadingId(null);
     }
@@ -285,43 +293,38 @@ export default function ArticleManager({
       <section className="rounded-xl border border-stone-200 bg-white/90 p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
-            <h1 className="text-xl font-semibold text-stone-900">New article</h1>
-            <p className="text-sm text-stone-600">
-              Draft and publish homestead stories, guides, and notes. You can add photos later when you are ready.
-            </p>
-            <p className="text-xs text-stone-500">
-              The editor opens in a draggable window so you can keep browsing your content list while writing. We’ll
-              auto-generate the homepage summary and a unique URL for you.
-            </p>
+            <h1 className="text-xl font-semibold text-stone-900">{t("articles.intro.title")}</h1>
+            <p className="text-sm text-stone-600">{t("articles.intro.description")}</p>
+            <p className="text-xs text-stone-500">{t("articles.intro.note")}</p>
           </div>
           <button
             type="button"
             onClick={openWindow}
             className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
           >
-            Write new article
+            {t("articles.intro.button")}
           </button>
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-stone-100">Existing articles</h2>
+        <h2 className="text-lg font-semibold text-stone-100">{t("articles.existing.title")}</h2>
         <div className="overflow-hidden rounded-xl border border-white/10 bg-white/90 shadow-lg shadow-stone-900/10">
           <table className="min-w-full divide-y divide-stone-200 text-sm text-stone-800">
             <thead className="bg-stone-100 text-stone-600">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">Title</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-left font-semibold">Categories</th>
-                <th className="px-4 py-3 text-left font-semibold">Last updated</th>
-                <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                <th className="px-4 py-3 text-left font-semibold">{t("articles.existing.table.title")}</th>
+                <th className="px-4 py-3 text-left font-semibold">{t("articles.existing.table.status")}</th>
+                <th className="px-4 py-3 text-left font-semibold">{t("articles.existing.table.categories")}</th>
+                <th className="px-4 py-3 text-left font-semibold">{t("articles.existing.table.updated")}</th>
+                <th className="px-4 py-3 text-left font-semibold">{t("articles.existing.table.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
               {articles.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-stone-500" colSpan={5}>
-                    No articles yet. Use “Write new article” to publish your first story.
+                    {t("articles.existing.empty")}
                   </td>
                 </tr>
               ) : (
@@ -336,18 +339,18 @@ export default function ArticleManager({
                     <td className="px-4 py-3">
                       {article.published ? (
                         <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                          Published
+                          {t("articles.existing.status.published")}
                         </span>
                       ) : (
                         <span className="rounded-full bg-stone-200 px-2.5 py-1 text-xs font-medium text-stone-700">
-                          Draft
+                          {t("articles.existing.status.draft")}
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-stone-600">
                       {article.categories.length > 0
                         ? article.categories.map((category) => category.name).join(", ")
-                        : "Uncategorized"}
+                        : t("articles.existing.uncategorized")}
                     </td>
                     <td className="px-4 py-3 text-stone-500">{formatDate(article.updatedAt)}</td>
                     <td className="px-4 py-3">
@@ -356,7 +359,7 @@ export default function ArticleManager({
                           href={`/admin/articles/${article.id}`}
                           className="text-sm font-semibold text-emerald-600 transition hover:text-emerald-700"
                         >
-                          Edit
+                          {t("articles.actions.edit")}
                         </Link>
                         <button
                           type="button"
@@ -364,7 +367,9 @@ export default function ArticleManager({
                           disabled={deleteLoadingId === article.id}
                           className="text-sm font-semibold text-red-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {deleteLoadingId === article.id ? "Deleting..." : "Delete"}
+                          {deleteLoadingId === article.id
+                            ? t("articles.actions.deleting")
+                            : t("articles.actions.delete")}
                         </button>
                       </div>
                     </td>
@@ -404,13 +409,14 @@ export default function ArticleManager({
               onPointerCancel={handlePointerUp}
               style={{ touchAction: "none" }}
             >
-              <span id="new-article-window-title">Compose new article</span>
+              <span id="new-article-window-title">{t("articles.modal.title")}</span>
               <button
                 type="button"
                 onClick={closeWindow}
+                data-no-drag
                 className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                Close
+                {t("articles.modal.close")}
               </button>
             </div>
             <form className="flex h-full flex-col overflow-hidden" onSubmit={createArticle}>
@@ -418,7 +424,7 @@ export default function ArticleManager({
                 <div className="space-y-5 p-6 pr-8">
                   <div className="grid gap-2">
                     <label className="text-sm font-medium text-stone-700" htmlFor="new-article-title">
-                      Title
+                      {t("articles.modal.form.title")}
                     </label>
                     <input
                       id="new-article-title"
@@ -426,15 +432,15 @@ export default function ArticleManager({
                       required
                       value={form.title}
                       onChange={handleChange("title")}
-                      placeholder="How we built our raised garden beds"
+                      placeholder={t("articles.modal.form.title")}
                       className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                     />
                   </div>
                   <RichTextEditor
                     id="new-article-content"
-                    label="Content"
+                    label={t("articles.modal.form.content")}
                     required
-                    description="Use the toolbar or Markdown shortcuts to format your post."
+                    description={t("articles.modal.form.contentDescription")}
                     value={form.content}
                     onChange={(next) =>
                       setForm((prev) => ({
@@ -442,12 +448,12 @@ export default function ArticleManager({
                         content: next,
                       }))
                     }
-                    placeholder="Write your story, include headers like ## First steps"
+                    placeholder={t("articles.modal.form.contentPlaceholder")}
                     className="flex min-h-[280px] flex-col"
                   />
                   <div className="grid gap-2">
                     <label className="text-sm font-medium text-stone-700" htmlFor="new-article-categories">
-                      Categories <span className="text-stone-400">(optional)</span>
+                      {t("articles.modal.form.categories")} <span className="text-stone-400">{t("common.optional")}</span>
                     </label>
                     <select
                       id="new-article-categories"
@@ -458,11 +464,11 @@ export default function ArticleManager({
                     >
                       {categories.map((category) => (
                         <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
+                        {category.name}
+                      </option>
+                    ))}
                     </select>
-                    <p className="text-xs text-stone-500">Hold Cmd (⌘) or Ctrl to select multiple categories.</p>
+                    <p className="text-xs text-stone-500">{t("articles.modal.form.categoriesHint")}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-6">
                     <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
@@ -472,12 +478,12 @@ export default function ArticleManager({
                         onChange={handleChange("published")}
                         className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
                       />
-                      Publish immediately
+                      {t("articles.modal.form.publish")}
                     </label>
                     {form.published && (
                       <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
                         <label className="font-medium text-stone-700" htmlFor="new-article-published-at">
-                          Publish date
+                          {t("articles.modal.form.publishDate")}
                         </label>
                         <input
                           id="new-article-published-at"
@@ -502,14 +508,14 @@ export default function ArticleManager({
                   onClick={closeWindow}
                   className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-800"
                 >
-                  Cancel
+                  {t("articles.modal.form.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {submitting ? "Saving..." : "Save article"}
+                  {submitting ? t("articles.modal.loading") : t("articles.modal.form.save")}
                 </button>
               </div>
             </form>

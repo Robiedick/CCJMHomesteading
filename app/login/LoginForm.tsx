@@ -58,7 +58,7 @@ export default function LoginForm({ copy }: { copy: LoginFormCopy }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/70 p-6 shadow-2xl backdrop-blur"
+      className="w-full rounded-2xl border border-stone-200 bg-white p-6 shadow-lg"
     >
       <div className="space-y-1">
         <label className="text-sm font-medium text-stone-700" htmlFor="username">

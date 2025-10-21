@@ -13,6 +13,7 @@ import type { Article, Category } from "@prisma/client";
 import { toDatetimeLocal } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n";
 import RichTextEditor from "@/components/RichTextEditor";
+import { createAdminTranslator, type AdminDictionary } from "@/lib/admin-i18n";
 
 type ArticleWithCategories = Article & { categories: Category[] };
 
@@ -41,10 +42,12 @@ export default function ArticleEditor({
   article,
   categories,
   defaultLocale,
+  dictionary,
 }: {
   article: ArticleWithCategories;
   categories: Category[];
   defaultLocale: Locale;
+  dictionary: AdminDictionary;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ArticleFormState>(() => toFormState(article));
@@ -58,6 +61,7 @@ export default function ArticleEditor({
   const resizeStartRef = useRef({ x: 0, y: 0, width: 720, height: 760 });
   const isDraggingRef = useRef(false);
   const isResizingRef = useRef(false);
+  const t = createAdminTranslator(dictionary);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -169,14 +173,14 @@ export default function ArticleEditor({
               .flat()
               .at(0)
           : null;
-        setError(payload.message ?? firstFieldError ?? "Unable to update article.");
+        setError(payload.message ?? firstFieldError ?? t("articleEditor.error"));
         return;
       }
 
       router.refresh();
       router.push("/admin/articles");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to update article.");
+      setError(err instanceof Error ? err.message : t("articleEditor.error"));
     } finally {
       setSubmitting(false);
     }
@@ -184,6 +188,10 @@ export default function ArticleEditor({
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
+    const target = event.target as HTMLElement | null;
+    if (target && target.closest("[data-no-drag]")) {
+      return;
+    }
     dragOffsetRef.current = {
       x: event.clientX - windowPosition.x,
       y: event.clientY - windowPosition.y,
@@ -267,7 +275,11 @@ export default function ArticleEditor({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-stone-900/60 backdrop-blur-sm" aria-hidden />
+      <div
+        className="fixed inset-0 z-40 bg-stone-900/60 backdrop-blur-sm"
+        aria-hidden
+        onClick={cancelEditing}
+      />
       <div
         ref={windowRef}
         role="dialog"
@@ -289,20 +301,22 @@ export default function ArticleEditor({
           onPointerCancel={handlePointerUp}
           style={{ touchAction: "none" }}
         >
-          <span id="edit-article-window-title">Edit article</span>
+          <span id="edit-article-window-title">{t("articleEditor.title")}</span>
           <div className="flex items-center gap-2">
             <Link
               href={`/${defaultLocale}/articles/${article.slug}`}
+              data-no-drag
               className="hidden rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:inline-flex"
             >
-              View live
+              {t("articleEditor.viewLive")}
             </Link>
             <button
               type="button"
               onClick={cancelEditing}
+              data-no-drag
               className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
-              Close
+              {t("articleEditor.close")}
             </button>
           </div>
         </div>
@@ -312,22 +326,21 @@ export default function ArticleEditor({
             <div className="space-y-5 p-6 pr-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-stone-900">Update details</h2>
-                  <p className="text-xs text-stone-500">
-                    Homepage summaries refresh automatically when you save changes.
-                  </p>
+                  <h2 className="text-lg font-semibold text-stone-900">{t("articleEditor.subtitle")}</h2>
+                  <p className="text-xs text-stone-500">{t("articleEditor.summary")}</p>
                 </div>
                 <Link
                   href={`/${defaultLocale}/articles/${article.slug}`}
+                  data-no-drag
                   className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
                 >
-                  View live post
+                  {t("articleEditor.viewLive")}
                 </Link>
               </div>
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-stone-700" htmlFor="edit-article-title">
-                  Title
+                  {t("articleEditor.form.title")}
                 </label>
                 <input
                   id="edit-article-title"
@@ -337,15 +350,17 @@ export default function ArticleEditor({
                   className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                 />
                 <p className="text-xs text-stone-500">
-                  Live at <span className="font-medium text-stone-600">/{defaultLocale}/articles/{article.slug}</span>
+                  {t("articleEditor.liveAt")}
+                  {" "}
+                  <span className="font-medium text-stone-600">/{defaultLocale}/articles/{article.slug}</span>
                 </p>
               </div>
 
               <RichTextEditor
                 id="edit-article-content"
-                label="Content"
+                label={t("articleEditor.form.content")}
                 required
-                description="Use the toolbar or Markdown shortcuts to format your article."
+                description={t("articleEditor.form.contentDescription")}
                 value={form.content}
                 onChange={(next) =>
                   setForm((prev) => ({
@@ -358,7 +373,7 @@ export default function ArticleEditor({
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-stone-700" htmlFor="edit-article-categories">
-                  Categories <span className="text-stone-400">(optional)</span>
+                  {t("articleEditor.form.categories")} <span className="text-stone-400">{t("common.optional")}</span>
                 </label>
                 <select
                   id="edit-article-categories"
@@ -373,7 +388,7 @@ export default function ArticleEditor({
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-stone-500">Hold Cmd (⌘) or Ctrl to select multiple categories.</p>
+                <p className="text-xs text-stone-500">{t("articleEditor.form.categoriesHint")}</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-6">
@@ -384,12 +399,12 @@ export default function ArticleEditor({
                     onChange={handleChange("published")}
                     className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
                   />
-                  Published
+                  {t("articleEditor.form.published")}
                 </label>
                 {form.published && (
                   <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
                     <label className="font-medium text-stone-700" htmlFor="edit-article-published-at">
-                      Publish date
+                      {t("articleEditor.form.publishDate")}
                     </label>
                     <input
                       id="edit-article-published-at"
@@ -416,14 +431,14 @@ export default function ArticleEditor({
               onClick={cancelEditing}
               className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-800"
             >
-              Cancel
+              {t("articleEditor.form.cancel")}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? "Saving..." : "Save changes"}
+              {submitting ? t("articleEditor.loading") : t("articleEditor.form.save")}
             </button>
           </div>
         </form>

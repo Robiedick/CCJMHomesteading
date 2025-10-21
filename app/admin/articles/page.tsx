@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import ArticleManager from "./ArticleManager";
+import { getDefaultLocale } from "@/lib/settings";
+import { getAdminDictionary } from "@/lib/admin-i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -14,5 +16,14 @@ export default async function ArticlesPage() {
     }),
   ]);
 
-  return <ArticleManager articles={articles} categories={categories} />;
+  const locale = await getDefaultLocale();
+  const dictionary = await getAdminDictionary(locale);
+
+  return (
+    <ArticleManager
+      articles={articles}
+      categories={categories}
+      dictionary={dictionary}
+    />
+  );
 }

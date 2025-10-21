@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getDefaultLocale } from "@/lib/settings";
 import ArticleEditor from "./ArticleEditor";
+import { getAdminDictionary } from "@/lib/admin-i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,14 @@ export default async function EditArticlePage({
   });
 
   const defaultLocale = await getDefaultLocale();
+  const dictionary = await getAdminDictionary(defaultLocale);
 
   return (
     <ArticleEditor
       article={article}
       categories={categories}
       defaultLocale={defaultLocale}
+      dictionary={dictionary}
     />
   );
 }

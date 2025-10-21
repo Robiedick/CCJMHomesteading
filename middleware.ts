@@ -6,12 +6,7 @@ import type { NextRequestWithAuth } from "next-auth/middleware";
 const SUPPORTED_LOCALES = ["en", "nl"] as const;
 const FALLBACK_LOCALE = "en" as const;
 const DEFAULT_LOCALE_ENDPOINT = "/api/settings/default-locale";
-const CACHE_TTL_MS = 60 * 1000;
-
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
-
-let cachedDefaultLocale: SupportedLocale | null = null;
-let cacheExpiresAt = 0;
 
 if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV !== "production") {
   process.env.NEXTAUTH_SECRET = "ccjm-homesteading-dev-secret-placeholder-key-123456";
@@ -29,17 +24,13 @@ const adminMiddleware = withAuth({
 const PUBLIC_FILE = /\.(.*)$/;
 
 async function resolveDefaultLocale(request: NextRequest): Promise<SupportedLocale> {
-  const now = Date.now();
-  if (cachedDefaultLocale && now < cacheExpiresAt) {
-    return cachedDefaultLocale;
-  }
-
   try {
     const url = new URL(DEFAULT_LOCALE_ENDPOINT, request.url);
     const response = await fetch(url, {
       headers: {
         "x-middleware-fetch": "default-locale",
       },
+      cache: "no-store",
     });
 
     if (response.ok) {
@@ -49,17 +40,13 @@ async function resolveDefaultLocale(request: NextRequest): Promise<SupportedLoca
         typeof locale === "string" &&
         SUPPORTED_LOCALES.includes(locale as SupportedLocale)
       ) {
-        cachedDefaultLocale = locale as SupportedLocale;
-        cacheExpiresAt = now + CACHE_TTL_MS;
-        return cachedDefaultLocale;
+        return locale as SupportedLocale;
       }
     }
   } catch (error) {
     console.error("Failed to fetch default locale in middleware", error);
   }
 
-  cachedDefaultLocale = FALLBACK_LOCALE;
-  cacheExpiresAt = now + CACHE_TTL_MS;
   return FALLBACK_LOCALE;
 }
 

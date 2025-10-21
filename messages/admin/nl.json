@@ -1,0 +1,126 @@
+{
+  "layout": {
+    "title": "CCJM Beheer",
+    "signedInAs": "Ingelogd als {{username}}",
+    "links": {
+      "overview": "Overzicht",
+      "search": "Zoeken",
+      "articles": "Artikelen",
+      "categories": "Categorieën",
+      "users": "Gebruikers",
+      "homepage": "Homepage aanpassen"
+    },
+    "quickSearch": {
+      "label": "Snel zoeken",
+      "placeholder": "Zoek overal…",
+      "button": "Zoeken"
+    },
+    "viewSite": "Bekijk site",
+    "logout": "Afmelden"
+  },
+  "dashboard": {
+    "title": "Homestead overzicht",
+    "subtitle": "Beheer artikelen en categorieën voor CCJM Homesteading.",
+    "stats": {
+      "articles": "Totaal artikelen",
+      "published": "Gepubliceerde artikelen",
+      "categories": "Categorieën"
+    },
+    "recent": {
+      "title": "Recent bijgewerkte artikelen",
+      "cta": "Beheer artikelen",
+      "empty": "Nog geen artikelen.",
+      "emptyLink": "Schrijf de eerste.",
+      "table": {
+        "title": "Titel",
+        "status": "Status",
+        "categories": "Categorieën",
+        "updated": "Bijgewerkt"
+      },
+      "status": {
+        "published": "Gepubliceerd",
+        "draft": "Concept"
+      },
+      "uncategorized": "Geen categorie"
+    }
+  },
+  "common": {
+    "optional": "(optioneel)"
+  },
+  "articles": {
+    "intro": {
+      "title": "Nieuw artikel",
+      "description": "Schrijf en publiceer homestead-verhalen, gidsen en notities. Foto’s kun je later toevoegen.",
+      "note": "De editor opent in een versleepbaar venster zodat je tijdens het schrijven de lijst kunt blijven bekijken. We maken automatisch een samenvatting en unieke URL.",
+      "button": "Nieuw artikel schrijven"
+    },
+    "existing": {
+      "title": "Bestaande artikelen",
+      "table": {
+        "title": "Titel",
+        "status": "Status",
+        "categories": "Categorieën",
+        "updated": "Laatst bijgewerkt",
+        "actions": "Acties"
+      },
+      "empty": "Nog geen artikelen. Gebruik ‘Nieuw artikel schrijven’ om te starten.",
+      "status": {
+        "published": "Gepubliceerd",
+        "draft": "Concept"
+      },
+      "uncategorized": "Geen categorie"
+    },
+    "modal": {
+      "title": "Nieuw artikel opstellen",
+      "viewLive": "Bekijk live",
+      "close": "Sluiten",
+      "form": {
+        "title": "Titel",
+        "titlePlaceholder": "Hoe wij onze verhoogde moestuinbedden bouwden",
+        "content": "Inhoud",
+        "contentDescription": "Gebruik de werkbalk of Markdown-sneltoetsen voor opmaak.",
+        "contentPlaceholder": "Schrijf je verhaal, gebruik koppen zoals ## Eerste stappen",
+        "categories": "Categorieën",
+        "categoriesHint": "Houd Cmd (⌘) of Ctrl ingedrukt om meerdere categorieën te kiezen.",
+        "publish": "Direct publiceren",
+        "publishDate": "Publicatiedatum",
+        "cancel": "Annuleren",
+        "save": "Artikel opslaan"
+      },
+      "loading": "Opslaan…",
+      "error": "Artikel opslaan is niet gelukt.",
+      "success": "Artikel opgeslagen"
+    },
+    "messages": {
+      "createError": "Artikel opslaan is niet gelukt.",
+      "deleteError": "Artikel verwijderen is niet gelukt."
+    },
+    "actions": {
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "deleting": "Bezig…"
+    }
+  },
+  "articleEditor": {
+    "title": "Artikel bewerken",
+    "subtitle": "Pas inhoud, publicatiestatus en categorieën aan.",
+    "summary": "De samenvatting op de homepage werkt automatisch bij zodra je opslaat.",
+    "viewLive": "Bekijk live",
+    "close": "Sluiten",
+    "liveAt": "Live op",
+    "form": {
+      "title": "Titel",
+      "content": "Inhoud",
+      "contentDescription": "Gebruik de werkbalk of Markdown-sneltoetsen voor opmaak.",
+      "categories": "Categorieën",
+      "categoriesHint": "Houd Cmd (⌘) of Ctrl ingedrukt om meerdere categorieën te kiezen.",
+      "published": "Gepubliceerd",
+      "publishDate": "Publicatiedatum",
+      "cancel": "Annuleren",
+      "save": "Wijzigingen opslaan"
+    },
+    "loading": "Opslaan…",
+    "error": "Artikel bijwerken is niet gelukt.",
+    "success": "Artikel bijgewerkt"
+  }
+}

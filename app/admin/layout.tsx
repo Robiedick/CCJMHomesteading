@@ -4,15 +4,7 @@ import { headers } from "next/headers";
 import { getServerAuthSession } from "@/lib/auth";
 import LogoutButton from "./LogoutButton";
 import { getDefaultLocale } from "@/lib/settings";
-
-const links = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/search", label: "Search" },
-  { href: "/admin/articles", label: "Articles" },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/homepage", label: "Change homepage" },
-];
+import { createAdminTranslator, getAdminDictionary } from "@/lib/admin-i18n";
 
 function isActivePath(currentPath: string, href: string) {
   if (href === "/admin") {
@@ -32,6 +24,17 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     "";
 
   const defaultLocale = await getDefaultLocale();
+  const dictionary = await getAdminDictionary(defaultLocale);
+  const t = createAdminTranslator(dictionary);
+
+  const links = [
+    { href: "/admin", label: t("layout.links.overview") },
+    { href: "/admin/search", label: t("layout.links.search") },
+    { href: "/admin/articles", label: t("layout.links.articles") },
+    { href: "/admin/categories", label: t("layout.links.categories") },
+    { href: "/admin/users", label: t("layout.links.users") },
+    { href: "/admin/homepage", label: t("layout.links.homepage") },
+  ];
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900">
@@ -40,9 +43,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <div className="space-y-6">
             <div>
               <Link href={`/${defaultLocale}`} className="text-lg font-semibold text-stone-900">
-                CCJM Admin
+                {t("layout.title")}
               </Link>
-              <p className="mt-1 text-xs text-stone-500">Signed in as {username}</p>
+              <p className="mt-1 text-xs text-stone-500">{t("layout.signedInAs", { username })}</p>
             </div>
             <nav className="flex flex-col gap-1 text-sm">
               {links.map((link) => (
@@ -61,11 +64,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             </nav>
             <form action="/admin/search" method="get" className="rounded-lg border border-stone-200 bg-stone-50/80 p-3">
               <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">
-                Quick search
+                {t("layout.quickSearch.label")}
                 <input
                   type="search"
                   name="q"
-                  placeholder="Find anything…"
+                  placeholder={t("layout.quickSearch.placeholder")}
                   className="mt-1 rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                 />
               </label>
@@ -73,7 +76,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 type="submit"
                 className="mt-3 w-full rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
-                Search
+                {t("layout.quickSearch.button")}
               </button>
             </form>
           </div>
@@ -82,9 +85,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               href={`/${defaultLocale}`}
               className="inline-flex items-center justify-center rounded-lg border border-stone-200 px-3 py-2 font-semibold text-emerald-600 transition hover:bg-stone-100 hover:text-emerald-700"
             >
-              View site
+              {t("layout.viewSite")}
             </Link>
-            <LogoutButton />
+            <LogoutButton label={t("layout.logout")} />
           </div>
         </aside>
         <main className="flex-1 space-y-8 pb-12">{children}</main>

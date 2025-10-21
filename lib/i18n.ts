@@ -7,7 +7,7 @@ export const locales = ["en", "nl"] as const;
 
 export type Locale = (typeof locales)[number];
 
-export const FALLBACK_LOCALE: Locale = "en";
+export const FALLBACK_LOCALE: Locale = "nl";
 export const DEFAULT_LOCALE: Locale = FALLBACK_LOCALE;
 
 export async function getDictionary(locale: Locale) {
