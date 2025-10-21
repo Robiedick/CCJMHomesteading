@@ -72,7 +72,7 @@ function useMarkdownEditor(initialMarkdown: string, onChange: (markdown: string)
         heading: { levels: [1, 2, 3] },
         codeBlock: false,
       }),
-      TextStyle.configure({ types: ["textStyle"] }),
+      TextStyle,
       Color,
       FontSize,
       Underline,
