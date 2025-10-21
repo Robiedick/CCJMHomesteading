@@ -307,6 +307,16 @@ async function main() {
     });
   }
 
+  console.log("⚙️ Ensuring site settings…");
+  await prisma.siteSetting.upsert({
+    where: { key: "defaultLocale" },
+    update: { value: "en" },
+    create: {
+      key: "defaultLocale",
+      value: "en",
+    },
+  });
+
   console.log("✅ Seed data applied.");
 }
 

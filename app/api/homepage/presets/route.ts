@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { homepageContentSchema } from "@/lib/validators";
-import { isSupportedLocale } from "@/lib/homepage";
+import { isSupportedLocale } from "@/lib/i18n";
 
 const createPresetSchema = z.object({
   locale: z.string(),

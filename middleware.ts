@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
-import type { NextFetchEvent, NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { withAuth } from "next-auth/middleware";
 import type { NextRequestWithAuth } from "next-auth/middleware";
 
 const SUPPORTED_LOCALES = ["en", "nl"] as const;
-const DEFAULT_LOCALE = "en" as const;
+const FALLBACK_LOCALE = "en" as const;
+const DEFAULT_LOCALE_ENDPOINT = "/api/settings/default-locale";
+const CACHE_TTL_MS = 60 * 1000;
+
+type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+
+let cachedDefaultLocale: SupportedLocale | null = null;
+let cacheExpiresAt = 0;
 
 if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV !== "production") {
   process.env.NEXTAUTH_SECRET = "ccjm-homesteading-dev-secret-placeholder-key-123456";
@@ -21,11 +28,46 @@ const adminMiddleware = withAuth({
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-export default function middleware(request: NextRequest, event: NextFetchEvent) {
+async function resolveDefaultLocale(request: NextRequest): Promise<SupportedLocale> {
+  const now = Date.now();
+  if (cachedDefaultLocale && now < cacheExpiresAt) {
+    return cachedDefaultLocale;
+  }
+
+  try {
+    const url = new URL(DEFAULT_LOCALE_ENDPOINT, request.url);
+    const response = await fetch(url, {
+      headers: {
+        "x-middleware-fetch": "default-locale",
+      },
+    });
+
+    if (response.ok) {
+      const payload = (await response.json()) as { locale?: string };
+      const locale = payload.locale;
+      if (
+        typeof locale === "string" &&
+        SUPPORTED_LOCALES.includes(locale as SupportedLocale)
+      ) {
+        cachedDefaultLocale = locale as SupportedLocale;
+        cacheExpiresAt = now + CACHE_TTL_MS;
+        return cachedDefaultLocale;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch default locale in middleware", error);
+  }
+
+  cachedDefaultLocale = FALLBACK_LOCALE;
+  cacheExpiresAt = now + CACHE_TTL_MS;
+  return FALLBACK_LOCALE;
+}
+
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {
-    return adminMiddleware(request as NextRequestWithAuth, event);
+    return adminMiddleware(request as NextRequestWithAuth);
   }
 
   if (
@@ -50,7 +92,7 @@ export default function middleware(request: NextRequest, event: NextFetchEvent) 
     SUPPORTED_LOCALES.includes(pathSegments[0] as (typeof SUPPORTED_LOCALES)[number]);
 
   if (!hasLocale) {
-    const locale = DEFAULT_LOCALE;
+    const locale = await resolveDefaultLocale(request);
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(url);

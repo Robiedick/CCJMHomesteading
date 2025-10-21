@@ -1,6 +1,7 @@
 import HomepageManager from "./HomepageManager";
 import { locales, type Locale } from "@/lib/i18n";
 import { getHomepageContentState, getHomepagePresets } from "@/lib/homepage";
+import { getDefaultLocale } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -27,5 +28,7 @@ export default async function HomepageSettingsPage() {
     });
   }
 
-  return <HomepageManager locales={states} />;
+  const defaultLocale = await getDefaultLocale();
+
+  return <HomepageManager locales={states} defaultLocale={defaultLocale} />;
 }

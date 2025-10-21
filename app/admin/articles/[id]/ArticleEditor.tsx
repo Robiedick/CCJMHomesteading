@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Article, Category } from "@prisma/client";
 import { slugify, toDatetimeLocal } from "@/lib/utils";
-import { DEFAULT_LOCALE } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
+import RichTextEditor from "@/components/RichTextEditor";
 
 type ArticleWithCategories = Article & { categories: Category[] };
 
@@ -34,9 +35,11 @@ function toFormState(article: ArticleWithCategories): ArticleFormState {
 export default function ArticleEditor({
   article,
   categories,
+  defaultLocale,
 }: {
   article: ArticleWithCategories;
   categories: Category[];
+  defaultLocale: Locale;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ArticleFormState>(() => toFormState(article));
@@ -141,7 +144,7 @@ export default function ArticleEditor({
         </div>
         <div className="flex gap-3">
           <Link
-            href={`/${DEFAULT_LOCALE}/articles/${article.slug}`}
+            href={`/${defaultLocale}/articles/${article.slug}`}
             className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
           >
             View live post
@@ -185,18 +188,19 @@ export default function ArticleEditor({
             className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           />
         </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-stone-700">
-            Content <span className="text-stone-400">(supports Markdown)</span>
-          </label>
-          <textarea
-            required
-            value={form.content}
-            onChange={handleChange("content")}
-            rows={12}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-        </div>
+        <RichTextEditor
+          id="article-content"
+          label="Content"
+          required
+          description="Use the toolbar or Markdown shortcuts to format your article."
+          value={form.content}
+          onChange={(next) =>
+            setForm((prev) => ({
+              ...prev,
+              content: next,
+            }))
+          }
+        />
         <div className="grid gap-2">
           <label className="text-sm font-medium text-stone-700">
             Categories <span className="text-stone-400">(optional)</span>

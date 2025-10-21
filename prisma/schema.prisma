@@ -144,3 +144,10 @@ model HomepagePreset {
   @@index([locale])
   @@unique([locale, name])
 }
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

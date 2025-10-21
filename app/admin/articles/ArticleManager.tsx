@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Article, Category } from "@prisma/client";
 import { formatDate, slugify } from "@/lib/utils";
+import RichTextEditor from "@/components/RichTextEditor";
 
 type ArticleWithCategories = Article & { categories: Category[] };
 
@@ -40,6 +41,90 @@ export default function ArticleManager({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
+  const [isWindowOpen, setIsWindowOpen] = useState(false);
+  const [windowPosition, setWindowPosition] = useState({ x: 80, y: 80 });
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const windowRef = useRef<HTMLDivElement | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!isWindowOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setIsWindowOpen(false);
+        setError(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    const centerTimeout = requestAnimationFrame(() => {
+      const panel = windowRef.current;
+      if (panel) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const panelWidth = panel.offsetWidth;
+        const panelHeight = panel.offsetHeight;
+        setWindowPosition({
+          x: Math.max(16, Math.min(viewportWidth - panelWidth - 16, viewportWidth / 2 - panelWidth / 2)),
+          y: Math.max(16, Math.min(viewportHeight - panelHeight - 16, viewportHeight / 4)),
+        });
+      }
+      titleInputRef.current?.focus();
+    });
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      cancelAnimationFrame(centerTimeout);
+    };
+  }, [isWindowOpen]);
+
+  function openWindow() {
+    setError(null);
+    setIsWindowOpen(true);
+  }
+
+  function closeWindow() {
+    isDraggingRef.current = false;
+    setIsWindowOpen(false);
+    setError(null);
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    dragOffsetRef.current = {
+      x: event.clientX - windowPosition.x,
+      y: event.clientY - windowPosition.y,
+    };
+    isDraggingRef.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!isDraggingRef.current) return;
+    const panel = windowRef.current;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const panelWidth = panel?.offsetWidth ?? 0;
+    const panelHeight = panel?.offsetHeight ?? 0;
+
+    const nextX = event.clientX - dragOffsetRef.current.x;
+    const nextY = event.clientY - dragOffsetRef.current.y;
+
+    setWindowPosition({
+      x: Math.max(16, Math.min(nextX, viewportWidth - panelWidth - 16)),
+      y: Math.max(16, Math.min(nextY, viewportHeight - panelHeight - 16)),
+    });
+  }
+
+  function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
 
   const handleChange =
     (field: keyof ArticleFormState) =>
@@ -120,6 +205,7 @@ export default function ArticleManager({
       }
 
       setForm(emptyArticleForm);
+      closeWindow();
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to create article.");
@@ -152,127 +238,32 @@ export default function ArticleManager({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-2 pb-4">
-          <h1 className="text-xl font-semibold text-stone-900">New article</h1>
-          <p className="text-sm text-stone-600">
-            Draft and publish homestead stories, guides, and notes. You can add photos
-            later when you are ready.
-          </p>
-        </div>
-        <form className="space-y-5" onSubmit={createArticle}>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-stone-700">Title</label>
-            <input
-              required
-              value={form.title}
-              onChange={handleChange("title")}
-              placeholder="How we built our raised garden beds"
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-stone-700">
-              Slug
-              <span className="ml-1 text-xs text-stone-400">
-                (URL path, auto-generated)
-              </span>
-            </label>
-            <input
-              required
-              value={form.slug}
-              onChange={handleChange("slug")}
-              placeholder="raised-garden-beds"
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-stone-700">
-              Excerpt <span className="text-stone-400">(optional)</span>
-            </label>
-            <textarea
-              value={form.excerpt}
-              onChange={handleChange("excerpt")}
-              rows={2}
-              placeholder="A quick summary for the homepage cards."
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-stone-700">
-              Content <span className="text-stone-400">(supports Markdown)</span>
-            </label>
-            <textarea
-              required
-              value={form.content}
-              onChange={handleChange("content")}
-              rows={10}
-              placeholder="Write your story, include headers using markdown like ## First steps"
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-stone-700">
-              Categories <span className="text-stone-400">(optional)</span>
-            </label>
-            <select
-              multiple
-              value={form.categoryIds}
-              onChange={handleChange("categoryIds")}
-              className="h-28 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+      <section className="rounded-xl border border-stone-200 bg-white/90 p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <h1 className="text-xl font-semibold text-stone-900">New article</h1>
+            <p className="text-sm text-stone-600">
+              Draft and publish homestead stories, guides, and notes. You can add photos later when you are ready.
+            </p>
             <p className="text-xs text-stone-500">
-              Hold Cmd (⌘) or Ctrl to select multiple categories.
+              The editor opens in a draggable window so you can keep browsing your content list while writing.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-6">
-            <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
-              <input
-                type="checkbox"
-                checked={form.published}
-                onChange={handleChange("published")}
-                className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              Publish immediately
-            </label>
-            {form.published && (
-              <div className="flex items-center gap-2 text-sm text-stone-600">
-                <label className="font-medium text-stone-700">Publish date</label>
-                <input
-                  type="datetime-local"
-                  value={form.publishedAt}
-                  onChange={handleChange("publishedAt")}
-                  className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                />
-              </div>
-            )}
-          </div>
-          {error && (
-            <p className="text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          )}
           <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+            onClick={openWindow}
+            className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
           >
-            {submitting ? "Saving..." : "Save article"}
+            Write new article
           </button>
-        </form>
+        </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-stone-900">Existing articles</h2>
-        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-stone-200 text-sm">
-            <thead className="bg-stone-50 text-stone-600">
+        <h2 className="text-lg font-semibold text-stone-100">Existing articles</h2>
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/90 shadow-lg shadow-stone-900/10">
+          <table className="min-w-full divide-y divide-stone-200 text-sm text-stone-800">
+            <thead className="bg-stone-100 text-stone-600">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Title</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
@@ -285,7 +276,7 @@ export default function ArticleManager({
               {articles.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-stone-500" colSpan={5}>
-                    No articles yet. Use the form above to write the first post.
+                    No articles yet. Use “Write new article” to publish your first story.
                   </td>
                 </tr>
               ) : (
@@ -303,7 +294,7 @@ export default function ArticleManager({
                           Published
                         </span>
                       ) : (
-                        <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
+                        <span className="rounded-full bg-stone-200 px-2.5 py-1 text-xs font-medium text-stone-700">
                           Draft
                         </span>
                       )}
@@ -313,9 +304,7 @@ export default function ArticleManager({
                         ? article.categories.map((category) => category.name).join(", ")
                         : "Uncategorized"}
                     </td>
-                    <td className="px-4 py-3 text-stone-500">
-                      {formatDate(article.updatedAt)}
-                    </td>
+                    <td className="px-4 py-3 text-stone-500">{formatDate(article.updatedAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-3">
                         <Link
@@ -328,7 +317,7 @@ export default function ArticleManager({
                           type="button"
                           onClick={() => deleteArticle(article.id)}
                           disabled={deleteLoadingId === article.id}
-                          className="text-sm font-semibold text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="text-sm font-semibold text-red-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {deleteLoadingId === article.id ? "Deleting..." : "Delete"}
                         </button>
@@ -341,6 +330,164 @@ export default function ArticleManager({
           </table>
         </div>
       </section>
+
+      {isWindowOpen ? (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-sm"
+            onClick={closeWindow}
+            aria-hidden
+          />
+          <div
+            ref={windowRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="new-article-window-title"
+            className="fixed z-50 w-[min(90vw,700px)] rounded-2xl border border-stone-700/20 bg-white shadow-2xl"
+            style={{ left: `${windowPosition.x}px`, top: `${windowPosition.y}px` }}
+          >
+            <div
+              className="flex cursor-move select-none items-center justify-between rounded-t-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              style={{ touchAction: "none" }}
+            >
+              <span id="new-article-window-title">Compose new article</span>
+              <button
+                type="button"
+                onClick={closeWindow}
+                className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Close
+              </button>
+            </div>
+            <form className="space-y-5 p-6" onSubmit={createArticle}>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-title">
+                  Title
+                </label>
+                <input
+                  id="new-article-title"
+                  ref={titleInputRef}
+                  required
+                  value={form.title}
+                  onChange={handleChange("title")}
+                  placeholder="How we built our raised garden beds"
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-slug">
+                  Slug
+                  <span className="ml-1 text-xs text-stone-400">(URL path, auto-generated)</span>
+                </label>
+                <input
+                  id="new-article-slug"
+                  required
+                  value={form.slug}
+                  onChange={handleChange("slug")}
+                  placeholder="raised-garden-beds"
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-excerpt">
+                  Excerpt <span className="text-stone-400">(optional)</span>
+                </label>
+                <textarea
+                  id="new-article-excerpt"
+                  value={form.excerpt}
+                  onChange={handleChange("excerpt")}
+                  rows={2}
+                  placeholder="A quick summary for the homepage cards."
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                />
+              </div>
+              <RichTextEditor
+                id="new-article-content"
+                label="Content"
+                required
+                description="Use the toolbar or Markdown shortcuts to format your post."
+                value={form.content}
+                onChange={(next) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    content: next,
+                  }))
+                }
+                placeholder="Write your story, include headers like ## First steps"
+              />
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-categories">
+                  Categories <span className="text-stone-400">(optional)</span>
+                </label>
+                <select
+                  id="new-article-categories"
+                  multiple
+                  value={form.categoryIds}
+                  onChange={handleChange("categoryIds")}
+                  className="h-28 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-stone-500">Hold Cmd (⌘) or Ctrl to select multiple categories.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={form.published}
+                    onChange={handleChange("published")}
+                    className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Publish immediately
+                </label>
+                {form.published && (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
+                    <label className="font-medium text-stone-700" htmlFor="new-article-published-at">
+                      Publish date
+                    </label>
+                    <input
+                      id="new-article-published-at"
+                      type="datetime-local"
+                      value={form.publishedAt}
+                      onChange={handleChange("publishedAt")}
+                      className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    />
+                  </div>
+                )}
+              </div>
+              {error && (
+                <p className="text-sm text-red-600" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closeWindow}
+                  className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Saving..." : "Save article"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

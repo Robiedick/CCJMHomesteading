@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerAuthSession } from "@/lib/auth";
-import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { getDefaultLocale } from "@/lib/settings";
 import { getHomepageContent } from "@/lib/homepage";
 import LoginForm from "./LoginForm";
 
@@ -16,12 +16,13 @@ export default async function LoginPage() {
     redirect("/admin");
   }
 
-  const content = await getHomepageContent(DEFAULT_LOCALE);
+  const defaultLocale = await getDefaultLocale();
+  const content = await getHomepageContent(defaultLocale);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-stone-900/40 px-6 py-16">
       <Link
-        href={`/${DEFAULT_LOCALE}`}
+        href={`/${defaultLocale}`}
         className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-200 transition hover:text-emerald-100"
       >
         <span aria-hidden>←</span>

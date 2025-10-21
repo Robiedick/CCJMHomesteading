@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getDefaultLocale } from "@/lib/settings";
 import ArticleEditor from "./ArticleEditor";
 
 export const dynamic = "force-dynamic";
@@ -27,5 +28,13 @@ export default async function EditArticlePage({
     orderBy: { name: "asc" },
   });
 
-  return <ArticleEditor article={article} categories={categories} />;
+  const defaultLocale = await getDefaultLocale();
+
+  return (
+    <ArticleEditor
+      article={article}
+      categories={categories}
+      defaultLocale={defaultLocale}
+    />
+  );
 }

@@ -264,9 +264,10 @@ const GROUPS: { title: string; fields: FieldDefinition[] }[] = [
 
 type HomepageManagerProps = {
   locales: LocaleState[];
+  defaultLocale: Locale;
 };
 
-export default function HomepageManager({ locales }: HomepageManagerProps) {
+export default function HomepageManager({ locales, defaultLocale }: HomepageManagerProps) {
   const initialForms = Object.fromEntries(
     locales.map(({ locale, data }) => [locale, { ...data }]),
   ) as Record<Locale, HomepageContentData>;
@@ -296,6 +297,12 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
         locales.map(({ locale }) => [locale, { saving: false, message: null, error: null }]),
       ) as Record<Locale, { saving: boolean; message: string | null; error: string | null }>,
   );
+  const [defaultLocaleValue, setDefaultLocaleValue] = useState<Locale>(defaultLocale);
+  const [defaultLocaleStatus, setDefaultLocaleStatus] = useState<{
+    saving: boolean;
+    message: string | null;
+    error: string | null;
+  }>({ saving: false, message: null, error: null });
 
   function updateField(locale: Locale, key: keyof HomepageContentData, value: string) {
     setForms((prev) => ({
@@ -305,6 +312,53 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
         [key]: value,
       },
     }));
+  }
+
+  function selectDefaultLocale(locale: string) {
+    if (!locales.some((item) => item.locale === locale)) {
+      return;
+    }
+    if (locale === defaultLocaleValue) {
+      return;
+    }
+    setDefaultLocaleValue(locale as Locale);
+    setDefaultLocaleStatus({ saving: false, message: null, error: null });
+  }
+
+  async function saveDefaultLocaleSetting() {
+    setDefaultLocaleStatus({ saving: true, message: null, error: null });
+
+    try {
+      const response = await fetch("/api/settings/default-locale", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale: defaultLocaleValue }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        setDefaultLocaleStatus({
+          saving: false,
+          message: null,
+          error: payload.message ?? "Unable to update default language.",
+        });
+        return;
+      }
+
+      setDefaultLocaleStatus({
+        saving: false,
+        message: "Default language updated.",
+        error: null,
+      });
+    } catch (error) {
+      setDefaultLocaleStatus({
+        saving: false,
+        message: null,
+        error: error instanceof Error ? error.message : "Unable to update default language.",
+      });
+    }
   }
 
   async function saveLocale(locale: Locale) {
@@ -525,6 +579,43 @@ export default function HomepageManager({ locales }: HomepageManagerProps) {
           Update the words on the public homepage. Each language can have its own phrasing. Any
           unset locale falls back to the defaults shown here.
         </p>
+        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-stone-200 bg-stone-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-stone-800">Default language</p>
+            <p className="text-xs text-stone-500">
+              Choose which locale loads first for site visitors and new admin sessions.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select
+              value={defaultLocaleValue}
+              onChange={(event) => selectDefaultLocale(event.target.value)}
+              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium uppercase tracking-[0.3em] text-stone-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            >
+              {locales.map(({ locale }) => (
+                <option key={locale} value={locale}>
+                  {locale.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                void saveDefaultLocaleSetting();
+              }}
+              disabled={defaultLocaleStatus.saving}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {defaultLocaleStatus.saving ? "Saving…" : "Save default"}
+            </button>
+          </div>
+        </div>
+        {defaultLocaleStatus.message && (
+          <p className="mt-3 text-sm font-medium text-emerald-600">{defaultLocaleStatus.message}</p>
+        )}
+        {defaultLocaleStatus.error && (
+          <p className="mt-3 text-sm font-medium text-red-600">{defaultLocaleStatus.error}</p>
+        )}
       </header>
 
       <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">

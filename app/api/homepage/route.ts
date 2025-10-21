@@ -4,24 +4,24 @@ import { requireAdminSession } from "@/lib/auth";
 import { homepageContentSchema } from "@/lib/validators";
 import {
   getHomepageContentState,
-  isSupportedLocale,
   mapDataToUpdateInput,
 } from "@/lib/homepage";
-import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
+import { isSupportedLocale, type Locale } from "@/lib/i18n";
+import { getDefaultLocale } from "@/lib/settings";
 
-function resolveLocale(searchParams: URLSearchParams): Locale {
+async function resolveLocale(searchParams: URLSearchParams): Promise<Locale> {
   const value = searchParams.get("locale");
   if (value && isSupportedLocale(value)) {
     return value;
   }
-  return DEFAULT_LOCALE;
+  return getDefaultLocale();
 }
 
 export async function GET(request: Request) {
   await requireAdminSession();
 
   const url = new URL(request.url);
-  const locale = resolveLocale(url.searchParams);
+  const locale = await resolveLocale(url.searchParams);
   const includeDefaults = url.searchParams.get("includeDefaults") === "true";
 
   const state = await getHomepageContentState(locale);
@@ -38,7 +38,7 @@ export async function PUT(request: Request) {
   await requireAdminSession();
 
   const url = new URL(request.url);
-  const locale = resolveLocale(url.searchParams);
+  const locale = await resolveLocale(url.searchParams);
 
   try {
     const body = await request.json();
@@ -75,7 +75,7 @@ export async function DELETE(request: Request) {
   await requireAdminSession();
 
   const url = new URL(request.url);
-  const locale = resolveLocale(url.searchParams);
+  const locale = await resolveLocale(url.searchParams);
 
   await prisma.homepageContent.delete({ where: { locale } }).catch(() => undefined);
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import SignupForm from "./SignupForm";
-import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { getDefaultLocale } from "@/lib/settings";
 
 type SignupPageProps = {
   params: { token: string };
@@ -25,12 +25,14 @@ export default async function SignupPage({ params }: SignupPageProps) {
   const expired = isExpired(invitation.expiresAt);
   const used = Boolean(invitation.usedAt);
 
+  const defaultLocale = await getDefaultLocale();
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-stone-900 via-stone-900/90 to-stone-900 px-6 py-16 text-stone-100">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/10 p-8 shadow-2xl backdrop-blur">
         <div className="flex flex-col gap-2 text-sm text-emerald-200">
           <Link
-            href={`/${DEFAULT_LOCALE}`}
+            href={`/${defaultLocale}`}
             className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300 transition hover:text-emerald-100"
           >
             <span aria-hidden>←</span>

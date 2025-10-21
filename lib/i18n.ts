@@ -7,10 +7,11 @@ export const locales = ["en", "nl"] as const;
 
 export type Locale = (typeof locales)[number];
 
-export const DEFAULT_LOCALE: Locale = "en";
+export const FALLBACK_LOCALE: Locale = "en";
+export const DEFAULT_LOCALE: Locale = FALLBACK_LOCALE;
 
 export async function getDictionary(locale: Locale) {
-  const dictionaryLoader = dictionaries[locale] ?? dictionaries[DEFAULT_LOCALE];
+  const dictionaryLoader = dictionaries[locale] ?? dictionaries[FALLBACK_LOCALE];
   return dictionaryLoader();
 }
 
@@ -22,4 +23,8 @@ export function getLocaleLabel(locale: Locale) {
     default:
       return { label: "English", short: "EN" };
   }
+}
+
+export function isSupportedLocale(value: string): value is Locale {
+  return (locales as readonly string[]).includes(value);
 }

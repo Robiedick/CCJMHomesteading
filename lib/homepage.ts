@@ -1,6 +1,6 @@
 import type { HomepageContent } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getDictionary, locales, type Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { homepageContentSchema } from "@/lib/validators";
 
 export type HomepageContentData = {
@@ -97,10 +97,6 @@ export async function getHomepageContentState(locale: Locale): Promise<HomepageC
     defaults,
     source: "database",
   };
-}
-
-export function isSupportedLocale(value: string): value is Locale {
-  return (locales as readonly string[]).includes(value);
 }
 
 export async function getDefaultHomepageContent(locale: Locale): Promise<HomepageContentData> {
