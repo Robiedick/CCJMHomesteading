@@ -182,14 +182,17 @@ export default function RichTextEditor({
 
   function handleColorChange(event: ChangeEvent<HTMLInputElement>) {
     const nextColor = event.target.value;
+    if (!editor) return;
     editor.chain().focus().setColor(nextColor).run();
   }
 
   function clearColor() {
+    if (!editor) return;
     editor.chain().focus().unsetColor().run();
   }
 
   function setFontSize(size: string) {
+    if (!editor) return;
     editor.chain().focus().setTextStyle({ fontSize: size }).run();
     if (currentStyle?.color) {
       editor.chain().focus().setColor(currentStyle.color).run();
@@ -197,6 +200,7 @@ export default function RichTextEditor({
   }
 
   function clearFontSize() {
+    if (!editor) return;
     editor.chain().focus().unsetTextStyle().run();
     if (currentStyle?.color) {
       editor.chain().focus().setColor(currentStyle.color).run();
