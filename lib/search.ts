@@ -66,9 +66,9 @@ export async function searchPublicContent(
           where: {
             published: true,
             OR: [
-              { title: { contains: query, mode: "insensitive" } },
-              { excerpt: { contains: query, mode: "insensitive" } },
-              { content: { contains: query, mode: "insensitive" } },
+              { title: { contains: query } },
+              { excerpt: { contains: query } },
+              { content: { contains: query } },
             ],
           },
           orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
@@ -80,8 +80,8 @@ export async function searchPublicContent(
       ? await prisma.category.findMany({
           where: {
             OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { description: { contains: query, mode: "insensitive" } },
+              { name: { contains: query } },
+              { description: { contains: query } },
             ],
           },
           orderBy: [{ name: "asc" }],
@@ -213,9 +213,9 @@ export async function searchAdminEntities(query: string): Promise<AdminSearchRes
     const articles = await prisma.article.findMany({
       where: {
         OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { excerpt: { contains: query, mode: "insensitive" } },
-          { content: { contains: query, mode: "insensitive" } },
+          { title: { contains: query } },
+          { excerpt: { contains: query } },
+          { content: { contains: query } },
         ],
       },
       orderBy: [{ updatedAt: "desc" }],
@@ -225,8 +225,8 @@ export async function searchAdminEntities(query: string): Promise<AdminSearchRes
     const categories = await prisma.category.findMany({
       where: {
         OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
+          { name: { contains: query } },
+          { description: { contains: query } },
         ],
       },
       orderBy: [{ name: "asc" }],
@@ -236,8 +236,8 @@ export async function searchAdminEntities(query: string): Promise<AdminSearchRes
     const users = await prisma.user.findMany({
       where: {
         OR: [
-          { username: { contains: query, mode: "insensitive" } },
-          { usernameNormalized: { contains: query, mode: "insensitive" } },
+          { username: { contains: query } },
+          { usernameNormalized: { contains: query } },
         ],
       },
       orderBy: [{ username: "asc" }],
@@ -247,8 +247,8 @@ export async function searchAdminEntities(query: string): Promise<AdminSearchRes
     const invitations = await prisma.invitation.findMany({
       where: {
         OR: [
-          { email: { contains: query, mode: "insensitive" } },
-          { token: { contains: query, mode: "insensitive" } },
+          { email: { contains: query } },
+          { token: { contains: query } },
         ],
       },
       orderBy: [{ createdAt: "desc" }],

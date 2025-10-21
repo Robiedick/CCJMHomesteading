@@ -20,10 +20,10 @@ export default async function LoginPage() {
   const content = await getHomepageContent(defaultLocale);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-stone-950 via-stone-900 to-stone-900 text-stone-100">
+    <div className="relative min-h-screen bg-gradient-to-br from-stone-950 via-stone-900 to-stone-900 text-stone-100 animate-fade-in">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_45%)]" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-10 px-6 py-14 lg:flex-row lg:items-center">
-        <aside className="hidden w-full rounded-3xl border border-white/10 bg-white/5 p-10 shadow-2xl shadow-emerald-900/20 backdrop-blur lg:flex lg:w-1/2 lg:flex-col lg:justify-between">
+        <aside className="hidden w-full rounded-3xl border border-white/10 bg-white/5 p-10 shadow-2xl shadow-emerald-900/20 backdrop-blur lg:flex lg:w-1/2 lg:flex-col lg:justify-between animate-fade-up">
           <div className="space-y-6">
             <Link
               href={`/${defaultLocale}`}
@@ -64,7 +64,7 @@ export default async function LoginPage() {
         </aside>
 
         <main className="flex w-full justify-center lg:w-1/2">
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/95 p-8 text-stone-900 shadow-2xl shadow-emerald-900/10">
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/95 p-8 text-stone-900 shadow-2xl shadow-emerald-900/10 animate-scale-in">
             <div className="mb-6 flex items-center justify-between lg:hidden">
               <Link
                 href={`/${defaultLocale}`}

@@ -310,10 +310,10 @@ async function main() {
   console.log("⚙️ Ensuring site settings…");
   await prisma.siteSetting.upsert({
     where: { key: "defaultLocale" },
-    update: { value: "en" },
+    update: { value: "nl" },
     create: {
       key: "defaultLocale",
-      value: "en",
+      value: "nl",
     },
   });
 

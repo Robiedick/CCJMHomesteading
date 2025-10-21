@@ -294,7 +294,7 @@ export default function ArticleEditor({
         }}
       >
         <div
-          className="flex cursor-move select-none items-center justify-between rounded-t-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white"
+          className="flex cursor-move select-none items-center justify-between rounded-t-2xl border-b border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-900"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -305,8 +305,11 @@ export default function ArticleEditor({
           <div className="flex items-center gap-2">
             <Link
               href={`/${defaultLocale}/articles/${article.slug}`}
+              prefetch={false}
+              target="_blank"
+              rel="noreferrer"
               data-no-drag
-              className="hidden rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:inline-flex"
+              className="hidden rounded-md border border-stone-300 px-2 py-1 text-xs font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-900 sm:inline-flex"
             >
               {t("articleEditor.viewLive")}
             </Link>
@@ -314,7 +317,7 @@ export default function ArticleEditor({
               type="button"
               onClick={cancelEditing}
               data-no-drag
-              className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="rounded-md border border-stone-300 px-2 py-1 text-xs font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-900"
             >
               {t("articleEditor.close")}
             </button>
@@ -331,6 +334,9 @@ export default function ArticleEditor({
                 </div>
                 <Link
                   href={`/${defaultLocale}/articles/${article.slug}`}
+                  prefetch={false}
+                  target="_blank"
+                  rel="noreferrer"
                   data-no-drag
                   className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
                 >

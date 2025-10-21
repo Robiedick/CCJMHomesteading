@@ -401,24 +401,26 @@ export default function ArticleManager({
               height: `${windowSize.height}px`,
             }}
           >
-            <div
-              className="flex cursor-move select-none items-center justify-between rounded-t-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white"
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              style={{ touchAction: "none" }}
+        <div
+          className="flex cursor-move select-none items-center justify-between rounded-t-2xl border-b border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-900"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={{ touchAction: "none" }}
+        >
+          <span id="new-article-window-title">{t("articles.modal.title")}</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={closeWindow}
+              data-no-drag
+              className="rounded-md border border-stone-300 px-2 py-1 text-xs font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-900"
             >
-              <span id="new-article-window-title">{t("articles.modal.title")}</span>
-              <button
-                type="button"
-                onClick={closeWindow}
-                data-no-drag
-                className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                {t("articles.modal.close")}
-              </button>
-            </div>
+              {t("articles.modal.close")}
+            </button>
+          </div>
+        </div>
             <form className="flex h-full flex-col overflow-hidden" onSubmit={createArticle}>
               <div className="flex-1 overflow-auto">
                 <div className="space-y-5 p-6 pr-8">
@@ -432,7 +434,7 @@ export default function ArticleManager({
                       required
                       value={form.title}
                       onChange={handleChange("title")}
-                      placeholder={t("articles.modal.form.title")}
+                      placeholder={t("articles.modal.form.titlePlaceholder")}
                       className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                     />
                   </div>
