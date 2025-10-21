@@ -38,3 +38,41 @@ export function toDatetimeLocal(date?: Date | null) {
     `${pad(date.getHours())}:${pad(date.getMinutes())}`,
   ].join("T");
 }
+
+function stripMarkdown(markdown: string) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, " $1 ")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+    .replace(/\[[^\]]*\]\([^)]+\)/g, " ")
+    .replace(/[*_~>#+=-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function generateExcerpt(markdown: string, maxLength = 220) {
+  const plain = stripMarkdown(markdown);
+  if (!plain) {
+    return "";
+  }
+
+  if (plain.length <= maxLength) {
+    return plain;
+  }
+
+  const sentences = plain.match(/[^.!?]+[.!?]+/g) ?? [];
+  let excerpt = "";
+  for (const sentence of sentences) {
+    if ((excerpt + sentence).trim().length > maxLength) {
+      break;
+    }
+    excerpt += `${sentence.trim()} `;
+  }
+
+  const result = excerpt.trim();
+  if (result) {
+    return result.length <= maxLength ? result : `${result.slice(0, maxLength).trim()}…`;
+  }
+
+  return `${plain.slice(0, maxLength).trim()}…`;
+}

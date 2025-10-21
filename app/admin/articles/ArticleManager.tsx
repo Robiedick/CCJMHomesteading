@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type PointerEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Article, Category } from "@prisma/client";
-import { formatDate, slugify } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import RichTextEditor from "@/components/RichTextEditor";
 
 type ArticleWithCategories = Article & { categories: Category[] };
 
 type ArticleFormState = {
   title: string;
-  slug: string;
-  excerpt: string;
   content: string;
   published: boolean;
   publishedAt: string;
@@ -21,13 +19,14 @@ type ArticleFormState = {
 
 const emptyArticleForm: ArticleFormState = {
   title: "",
-  slug: "",
-  excerpt: "",
   content: "",
   published: false,
   publishedAt: "",
   categoryIds: [],
 };
+
+const MIN_WINDOW_WIDTH = 520;
+const MIN_WINDOW_HEIGHT = 520;
 
 export default function ArticleManager({
   articles,
@@ -43,8 +42,11 @@ export default function ArticleManager({
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
   const [isWindowOpen, setIsWindowOpen] = useState(false);
   const [windowPosition, setWindowPosition] = useState({ x: 80, y: 80 });
+  const [windowSize, setWindowSize] = useState({ width: 720, height: 760 });
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
+  const isResizingRef = useRef(false);
+  const resizeStartRef = useRef({ x: 0, y: 0, width: 720, height: 760 });
   const windowRef = useRef<HTMLDivElement | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -83,6 +85,14 @@ export default function ArticleManager({
   }, [isWindowOpen]);
 
   function openWindow() {
+    if (typeof window !== "undefined") {
+      const maxWidth = Math.max(MIN_WINDOW_WIDTH, window.innerWidth - 32);
+      const maxHeight = Math.max(MIN_WINDOW_HEIGHT, window.innerHeight - 32);
+      setWindowSize((prev) => ({
+        width: Math.min(prev.width, maxWidth),
+        height: Math.min(prev.height, maxHeight),
+      }));
+    }
     setError(null);
     setIsWindowOpen(true);
   }
@@ -126,36 +136,57 @@ export default function ArticleManager({
     event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
+  function handleResizePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    isResizingRef.current = true;
+    resizeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      width: windowSize.width,
+      height: windowSize.height,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleResizePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!isResizingRef.current) return;
+
+    const deltaX = event.clientX - resizeStartRef.current.x;
+    const deltaY = event.clientY - resizeStartRef.current.y;
+
+    const maxWidth = Math.max(MIN_WINDOW_WIDTH, window.innerWidth - windowPosition.x - 16);
+    const maxHeight = Math.max(MIN_WINDOW_HEIGHT, window.innerHeight - windowPosition.y - 16);
+
+    const nextWidth = Math.max(
+      MIN_WINDOW_WIDTH,
+      Math.min(resizeStartRef.current.width + deltaX, maxWidth),
+    );
+    const nextHeight = Math.max(
+      MIN_WINDOW_HEIGHT,
+      Math.min(resizeStartRef.current.height + deltaY, maxHeight),
+    );
+
+    setWindowSize({ width: nextWidth, height: nextHeight });
+  }
+
+  function handleResizePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (!isResizingRef.current) return;
+    isResizingRef.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
   const handleChange =
     (field: keyof ArticleFormState) =>
     (
       event:
-        | React.ChangeEvent<HTMLInputElement>
-        | React.ChangeEvent<HTMLTextAreaElement>
-        | React.ChangeEvent<HTMLSelectElement>,
+        | ChangeEvent<HTMLInputElement>
+        | ChangeEvent<HTMLTextAreaElement>
+        | ChangeEvent<HTMLSelectElement>,
     ) => {
       const value =
         event.target.type === "checkbox"
           ? (event.target as HTMLInputElement).checked
           : event.target.value;
-
-      if (field === "title") {
-        const derivedSlug = slugify(String(value));
-        setForm((prev) => ({
-          ...prev,
-          title: String(value),
-          slug: prev.slug.length > 0 ? prev.slug : derivedSlug,
-        }));
-        return;
-      }
-
-      if (field === "slug") {
-        setForm((prev) => ({
-          ...prev,
-          slug: slugify(String(value)),
-        }));
-        return;
-      }
 
       if (field === "categoryIds") {
         const options = Array.from(
@@ -165,6 +196,16 @@ export default function ArticleManager({
         setForm((prev) => ({
           ...prev,
           categoryIds: options,
+        }));
+        return;
+      }
+
+      if (field === "published") {
+        const next = Boolean(value);
+        setForm((prev) => ({
+          ...prev,
+          published: next,
+          publishedAt: next ? prev.publishedAt : "",
         }));
         return;
       }
@@ -185,7 +226,10 @@ export default function ArticleManager({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          title: form.title,
+          content: form.content,
+          published: form.published,
+          publishedAt: form.published ? form.publishedAt : "",
           categoryIds: form.categoryIds.map((value) => Number(value)),
         }),
       });
@@ -246,7 +290,8 @@ export default function ArticleManager({
               Draft and publish homestead stories, guides, and notes. You can add photos later when you are ready.
             </p>
             <p className="text-xs text-stone-500">
-              The editor opens in a draggable window so you can keep browsing your content list while writing.
+              The editor opens in a draggable window so you can keep browsing your content list while writing. We’ll
+              auto-generate the homepage summary and a unique URL for you.
             </p>
           </div>
           <button
@@ -343,8 +388,13 @@ export default function ArticleManager({
             role="dialog"
             aria-modal="true"
             aria-labelledby="new-article-window-title"
-            className="fixed z-50 w-[min(90vw,700px)] rounded-2xl border border-stone-700/20 bg-white shadow-2xl"
-            style={{ left: `${windowPosition.x}px`, top: `${windowPosition.y}px` }}
+            className="fixed z-50 flex flex-col rounded-2xl border border-stone-700/20 bg-white shadow-2xl"
+            style={{
+              left: `${windowPosition.x}px`,
+              top: `${windowPosition.y}px`,
+              width: `${windowSize.width}px`,
+              height: `${windowSize.height}px`,
+            }}
           >
             <div
               className="flex cursor-move select-none items-center justify-between rounded-t-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white"
@@ -363,112 +413,90 @@ export default function ArticleManager({
                 Close
               </button>
             </div>
-            <form className="space-y-5 p-6" onSubmit={createArticle}>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-title">
-                  Title
-                </label>
-                <input
-                  id="new-article-title"
-                  ref={titleInputRef}
-                  required
-                  value={form.title}
-                  onChange={handleChange("title")}
-                  placeholder="How we built our raised garden beds"
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-slug">
-                  Slug
-                  <span className="ml-1 text-xs text-stone-400">(URL path, auto-generated)</span>
-                </label>
-                <input
-                  id="new-article-slug"
-                  required
-                  value={form.slug}
-                  onChange={handleChange("slug")}
-                  placeholder="raised-garden-beds"
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-excerpt">
-                  Excerpt <span className="text-stone-400">(optional)</span>
-                </label>
-                <textarea
-                  id="new-article-excerpt"
-                  value={form.excerpt}
-                  onChange={handleChange("excerpt")}
-                  rows={2}
-                  placeholder="A quick summary for the homepage cards."
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                />
-              </div>
-              <RichTextEditor
-                id="new-article-content"
-                label="Content"
-                required
-                description="Use the toolbar or Markdown shortcuts to format your post."
-                value={form.content}
-                onChange={(next) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    content: next,
-                  }))
-                }
-                placeholder="Write your story, include headers like ## First steps"
-              />
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-stone-700" htmlFor="new-article-categories">
-                  Categories <span className="text-stone-400">(optional)</span>
-                </label>
-                <select
-                  id="new-article-categories"
-                  multiple
-                  value={form.categoryIds}
-                  onChange={handleChange("categoryIds")}
-                  className="h-28 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                >
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-stone-500">Hold Cmd (⌘) or Ctrl to select multiple categories.</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-6">
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
-                  <input
-                    type="checkbox"
-                    checked={form.published}
-                    onChange={handleChange("published")}
-                    className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  Publish immediately
-                </label>
-                {form.published && (
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
-                    <label className="font-medium text-stone-700" htmlFor="new-article-published-at">
-                      Publish date
+            <form className="flex h-full flex-col overflow-hidden" onSubmit={createArticle}>
+              <div className="flex-1 overflow-auto">
+                <div className="space-y-5 p-6 pr-8">
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium text-stone-700" htmlFor="new-article-title">
+                      Title
                     </label>
                     <input
-                      id="new-article-published-at"
-                      type="datetime-local"
-                      value={form.publishedAt}
-                      onChange={handleChange("publishedAt")}
-                      className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      id="new-article-title"
+                      ref={titleInputRef}
+                      required
+                      value={form.title}
+                      onChange={handleChange("title")}
+                      placeholder="How we built our raised garden beds"
+                      className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                     />
                   </div>
-                )}
+                  <RichTextEditor
+                    id="new-article-content"
+                    label="Content"
+                    required
+                    description="Use the toolbar or Markdown shortcuts to format your post."
+                    value={form.content}
+                    onChange={(next) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        content: next,
+                      }))
+                    }
+                    placeholder="Write your story, include headers like ## First steps"
+                    className="flex min-h-[280px] flex-col"
+                  />
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium text-stone-700" htmlFor="new-article-categories">
+                      Categories <span className="text-stone-400">(optional)</span>
+                    </label>
+                    <select
+                      id="new-article-categories"
+                      multiple
+                      value={form.categoryIds}
+                      onChange={handleChange("categoryIds")}
+                      className="h-28 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    >
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-stone-500">Hold Cmd (⌘) or Ctrl to select multiple categories.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-6">
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
+                      <input
+                        type="checkbox"
+                        checked={form.published}
+                        onChange={handleChange("published")}
+                        className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Publish immediately
+                    </label>
+                    {form.published && (
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
+                        <label className="font-medium text-stone-700" htmlFor="new-article-published-at">
+                          Publish date
+                        </label>
+                        <input
+                          id="new-article-published-at"
+                          type="datetime-local"
+                          value={form.publishedAt}
+                          onChange={handleChange("publishedAt")}
+                          className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {error && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {error}
+                    </p>
+                  )}
+                </div>
               </div>
-              {error && (
-                <p className="text-sm text-red-600" role="alert">
-                  {error}
-                </p>
-              )}
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex items-center justify-end gap-3 border-t border-stone-200 bg-white/90 px-6 py-4">
                 <button
                   type="button"
                   onClick={closeWindow}
@@ -485,6 +513,14 @@ export default function ArticleManager({
                 </button>
               </div>
             </form>
+            <div
+              className="absolute bottom-2 right-2 h-4 w-4 cursor-se-resize rounded border border-stone-400/60 bg-white/80 shadow-sm"
+              onPointerDown={handleResizePointerDown}
+              onPointerMove={handleResizePointerMove}
+              onPointerUp={handleResizePointerUp}
+              onPointerCancel={handleResizePointerUp}
+              aria-hidden
+            />
           </div>
         </>
       ) : null}

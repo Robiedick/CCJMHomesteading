@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Article, Category } from "@prisma/client";
-import { slugify, toDatetimeLocal } from "@/lib/utils";
+import { toDatetimeLocal } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n";
 import RichTextEditor from "@/components/RichTextEditor";
 
@@ -12,8 +12,6 @@ type ArticleWithCategories = Article & { categories: Category[] };
 
 type ArticleFormState = {
   title: string;
-  slug: string;
-  excerpt: string;
   content: string;
   published: boolean;
   publishedAt: string;
@@ -23,8 +21,6 @@ type ArticleFormState = {
 function toFormState(article: ArticleWithCategories): ArticleFormState {
   return {
     title: article.title,
-    slug: article.slug,
-    excerpt: article.excerpt ?? "",
     content: article.content,
     published: article.published,
     publishedAt: toDatetimeLocal(article.publishedAt ?? article.updatedAt),
@@ -50,32 +46,14 @@ export default function ArticleEditor({
     (field: keyof ArticleFormState) =>
     (
       event:
-        | React.ChangeEvent<HTMLInputElement>
-        | React.ChangeEvent<HTMLTextAreaElement>
-        | React.ChangeEvent<HTMLSelectElement>,
+        | ChangeEvent<HTMLInputElement>
+        | ChangeEvent<HTMLTextAreaElement>
+        | ChangeEvent<HTMLSelectElement>,
     ) => {
       const value =
         event.target.type === "checkbox"
           ? (event.target as HTMLInputElement).checked
           : event.target.value;
-
-      if (field === "title") {
-        const derivedSlug = slugify(String(value));
-        setForm((prev) => ({
-          ...prev,
-          title: String(value),
-          slug: prev.slug.length > 0 ? prev.slug : derivedSlug,
-        }));
-        return;
-      }
-
-      if (field === "slug") {
-        setForm((prev) => ({
-          ...prev,
-          slug: slugify(String(value)),
-        }));
-        return;
-      }
 
       if (field === "categoryIds") {
         const options = Array.from(
@@ -85,6 +63,16 @@ export default function ArticleEditor({
         setForm((prev) => ({
           ...prev,
           categoryIds: options,
+        }));
+        return;
+      }
+
+      if (field === "published") {
+        const next = Boolean(value);
+        setForm((prev) => ({
+          ...prev,
+          published: next,
+          publishedAt: next ? prev.publishedAt : "",
         }));
         return;
       }
@@ -105,7 +93,10 @@ export default function ArticleEditor({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          title: form.title,
+          content: form.content,
+          published: form.published,
+          publishedAt: form.published ? form.publishedAt : "",
           categoryIds: form.categoryIds.map((value) => Number(value)),
         }),
       });
@@ -141,6 +132,9 @@ export default function ArticleEditor({
           <p className="mt-1 text-sm text-stone-600">
             Update content, publication status, and categories.
           </p>
+          <p className="text-xs text-stone-500">
+            The homepage summary refreshes automatically when you save changes.
+          </p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -167,26 +161,9 @@ export default function ArticleEditor({
             onChange={handleChange("title")}
             className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-stone-700">Slug</label>
-          <input
-            required
-            value={form.slug}
-            onChange={handleChange("slug")}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-stone-700">
-            Excerpt <span className="text-stone-400">(optional)</span>
-          </label>
-          <textarea
-            value={form.excerpt}
-            onChange={handleChange("excerpt")}
-            rows={2}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
+          <p className="text-xs text-stone-500">
+            This article lives at <span className="font-medium text-stone-600">/{defaultLocale}/articles/{article.slug}</span>.
+          </p>
         </div>
         <RichTextEditor
           id="article-content"
@@ -200,6 +177,7 @@ export default function ArticleEditor({
               content: next,
             }))
           }
+          className="flex min-h-[320px] flex-col"
         />
         <div className="grid gap-2">
           <label className="text-sm font-medium text-stone-700">

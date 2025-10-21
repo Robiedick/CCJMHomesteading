@@ -33,7 +33,9 @@ body {
 
 .tiptap {
   min-height: 16rem;
+  height: 100%;
   outline: none;
+  overflow-y: auto;
 }
 
 .tiptap p,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { articleInputSchema } from "@/lib/validators";
-import { slugify } from "@/lib/utils";
+import { generateExcerpt } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth";
 
@@ -60,9 +60,11 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const excerpt = generateExcerpt(typeof body.content === "string" ? body.content : "");
     const parsed = articleInputSchema.safeParse({
       ...body,
-      slug: slugify(body.slug || body.title || ""),
+      slug: existing.slug,
+      excerpt,
       categoryIds: Array.isArray(body.categoryIds)
         ? body.categoryIds.map((value: unknown) => Number(value))
         : [],
