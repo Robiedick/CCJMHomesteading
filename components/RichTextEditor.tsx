@@ -193,7 +193,7 @@ export default function RichTextEditor({
 
   function setFontSize(size: string) {
     if (!editor) return;
-    editor.chain().focus().setTextStyle({ fontSize: size }).run();
+    editor.chain().focus().setMark("textStyle", { fontSize: size }).run();
     if (currentStyle?.color) {
       editor.chain().focus().setColor(currentStyle.color).run();
     }
@@ -201,7 +201,7 @@ export default function RichTextEditor({
 
   function clearFontSize() {
     if (!editor) return;
-    editor.chain().focus().unsetTextStyle().run();
+    editor.chain().focus().unsetMark("textStyle", { fontSize: undefined }).run();
     if (currentStyle?.color) {
       editor.chain().focus().setColor(currentStyle.color).run();
     }
