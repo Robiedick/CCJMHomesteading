@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type PointerEvent,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Article, Category } from "@prisma/client";
@@ -28,6 +34,9 @@ function toFormState(article: ArticleWithCategories): ArticleFormState {
   };
 }
 
+const MIN_WINDOW_WIDTH = 520;
+const MIN_WINDOW_HEIGHT = 520;
+
 export default function ArticleEditor({
   article,
   categories,
@@ -41,6 +50,55 @@ export default function ArticleEditor({
   const [form, setForm] = useState<ArticleFormState>(() => toFormState(article));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [windowPosition, setWindowPosition] = useState({ x: 80, y: 80 });
+  const [windowSize, setWindowSize] = useState({ width: 720, height: 760 });
+
+  const windowRef = useRef<HTMLDivElement | null>(null);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const resizeStartRef = useRef({ x: 0, y: 0, width: 720, height: 760 });
+  const isDraggingRef = useRef(false);
+  const isResizingRef = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        router.push("/admin/articles");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    const frame = requestAnimationFrame(() => {
+      const panel = windowRef.current;
+      if (!panel) return;
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const panelWidth = panel.offsetWidth || MIN_WINDOW_WIDTH;
+      const panelHeight = panel.offsetHeight || MIN_WINDOW_HEIGHT;
+
+      const nextX = Math.max(
+        16,
+        Math.min(viewportWidth - panelWidth - 16, viewportWidth / 2 - panelWidth / 2),
+      );
+      const nextY = Math.max(
+        16,
+        Math.min(viewportHeight - panelHeight - 16, viewportHeight / 6),
+      );
+
+      setWindowPosition({ x: nextX, y: nextY });
+      setWindowSize((prev) => ({
+        width: Math.min(prev.width, Math.max(MIN_WINDOW_WIDTH, viewportWidth - 32)),
+        height: Math.min(prev.height, Math.max(MIN_WINDOW_HEIGHT, viewportHeight - 32)),
+      }));
+    });
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      cancelAnimationFrame(frame);
+    };
+  }, [router]);
 
   const handleChange =
     (field: keyof ArticleFormState) =>
@@ -124,125 +182,261 @@ export default function ArticleEditor({
     }
   }
 
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-stone-900">Edit article</h1>
-          <p className="mt-1 text-sm text-stone-600">
-            Update content, publication status, and categories.
-          </p>
-          <p className="text-xs text-stone-500">
-            The homepage summary refreshes automatically when you save changes.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/${defaultLocale}/articles/${article.slug}`}
-            className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
-          >
-            View live post
-          </Link>
-          <Link
-            href="/admin/articles"
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-700"
-          >
-            Back to articles
-          </Link>
-        </div>
-      </div>
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    dragOffsetRef.current = {
+      x: event.clientX - windowPosition.x,
+      y: event.clientY - windowPosition.y,
+    };
+    isDraggingRef.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
 
-      <form className="space-y-5 rounded-xl border border-stone-200 bg-white p-6 shadow-sm" onSubmit={updateArticle}>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-stone-700">Title</label>
-          <input
-            required
-            value={form.title}
-            onChange={handleChange("title")}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-          <p className="text-xs text-stone-500">
-            This article lives at <span className="font-medium text-stone-600">/{defaultLocale}/articles/{article.slug}</span>.
-          </p>
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!isDraggingRef.current) return;
+
+    const panel = windowRef.current;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const panelWidth = panel?.offsetWidth ?? windowSize.width;
+    const panelHeight = panel?.offsetHeight ?? windowSize.height;
+
+    const nextX = event.clientX - dragOffsetRef.current.x;
+    const nextY = event.clientY - dragOffsetRef.current.y;
+
+    setWindowPosition({
+      x: Math.max(16, Math.min(nextX, viewportWidth - panelWidth - 16)),
+      y: Math.max(16, Math.min(nextY, viewportHeight - panelHeight - 16)),
+    });
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  function handleResizePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    isResizingRef.current = true;
+    resizeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      width: windowSize.width,
+      height: windowSize.height,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleResizePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!isResizingRef.current) return;
+
+    const deltaX = event.clientX - resizeStartRef.current.x;
+    const deltaY = event.clientY - resizeStartRef.current.y;
+
+    const maxWidth = Math.max(
+      MIN_WINDOW_WIDTH,
+      window.innerWidth - windowPosition.x - 16,
+    );
+    const maxHeight = Math.max(
+      MIN_WINDOW_HEIGHT,
+      window.innerHeight - windowPosition.y - 16,
+    );
+
+    const nextWidth = Math.max(
+      MIN_WINDOW_WIDTH,
+      Math.min(resizeStartRef.current.width + deltaX, maxWidth),
+    );
+    const nextHeight = Math.max(
+      MIN_WINDOW_HEIGHT,
+      Math.min(resizeStartRef.current.height + deltaY, maxHeight),
+    );
+
+    setWindowSize({ width: nextWidth, height: nextHeight });
+  }
+
+  function handleResizePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (!isResizingRef.current) return;
+    isResizingRef.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  function cancelEditing() {
+    router.push("/admin/articles");
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-stone-900/60 backdrop-blur-sm" aria-hidden />
+      <div
+        ref={windowRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-article-window-title"
+        className="fixed z-50 flex flex-col rounded-2xl border border-stone-700/20 bg-white shadow-2xl"
+        style={{
+          left: `${windowPosition.x}px`,
+          top: `${windowPosition.y}px`,
+          width: `${windowSize.width}px`,
+          height: `${windowSize.height}px`,
+        }}
+      >
+        <div
+          className="flex cursor-move select-none items-center justify-between rounded-t-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={{ touchAction: "none" }}
+        >
+          <span id="edit-article-window-title">Edit article</span>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/${defaultLocale}/articles/${article.slug}`}
+              className="hidden rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:inline-flex"
+            >
+              View live
+            </Link>
+            <button
+              type="button"
+              onClick={cancelEditing}
+              className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              Close
+            </button>
+          </div>
         </div>
-        <RichTextEditor
-          id="article-content"
-          label="Content"
-          required
-          description="Use the toolbar or Markdown shortcuts to format your article."
-          value={form.content}
-          onChange={(next) =>
-            setForm((prev) => ({
-              ...prev,
-              content: next,
-            }))
-          }
-          className="flex min-h-[320px] flex-col"
-        />
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-stone-700">
-            Categories <span className="text-stone-400">(optional)</span>
-          </label>
-          <select
-            multiple
-            value={form.categoryIds}
-            onChange={handleChange("categoryIds")}
-            className="h-28 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-stone-500">
-            Hold Cmd (⌘) or Ctrl to select multiple categories.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-6">
-          <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
-            <input
-              type="checkbox"
-              checked={form.published}
-              onChange={handleChange("published")}
-              className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
-            />
-            Published
-          </label>
-          {form.published && (
-            <div className="flex items-center gap-2 text-sm text-stone-600">
-              <label className="font-medium text-stone-700">Publish date</label>
-              <input
-                type="datetime-local"
-                value={form.publishedAt}
-                onChange={handleChange("publishedAt")}
-                className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+
+        <form className="flex h-full flex-col overflow-hidden" onSubmit={updateArticle}>
+          <div className="flex-1 overflow-auto">
+            <div className="space-y-5 p-6 pr-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-stone-900">Update details</h2>
+                  <p className="text-xs text-stone-500">
+                    Homepage summaries refresh automatically when you save changes.
+                  </p>
+                </div>
+                <Link
+                  href={`/${defaultLocale}/articles/${article.slug}`}
+                  className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
+                >
+                  View live post
+                </Link>
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-stone-700" htmlFor="edit-article-title">
+                  Title
+                </label>
+                <input
+                  id="edit-article-title"
+                  required
+                  value={form.title}
+                  onChange={handleChange("title")}
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                />
+                <p className="text-xs text-stone-500">
+                  Live at <span className="font-medium text-stone-600">/{defaultLocale}/articles/{article.slug}</span>
+                </p>
+              </div>
+
+              <RichTextEditor
+                id="edit-article-content"
+                label="Content"
+                required
+                description="Use the toolbar or Markdown shortcuts to format your article."
+                value={form.content}
+                onChange={(next) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    content: next,
+                  }))
+                }
+                className="flex min-h-[320px] flex-col"
               />
+
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-stone-700" htmlFor="edit-article-categories">
+                  Categories <span className="text-stone-400">(optional)</span>
+                </label>
+                <select
+                  id="edit-article-categories"
+                  multiple
+                  value={form.categoryIds}
+                  onChange={handleChange("categoryIds")}
+                  className="h-28 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-stone-500">Hold Cmd (⌘) or Ctrl to select multiple categories.</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={form.published}
+                    onChange={handleChange("published")}
+                    className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Published
+                </label>
+                {form.published && (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
+                    <label className="font-medium text-stone-700" htmlFor="edit-article-published-at">
+                      Publish date
+                    </label>
+                    <input
+                      id="edit-article-published-at"
+                      type="datetime-local"
+                      value={form.publishedAt}
+                      onChange={handleChange("publishedAt")}
+                      className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-600" role="alert">
+                  {error}
+                </p>
+              )}
             </div>
-          )}
-        </div>
-        {error && (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Saving..." : "Save changes"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/articles")}
-            className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 border-t border-stone-200 bg-white/90 px-6 py-4">
+            <button
+              type="button"
+              onClick={cancelEditing}
+              className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? "Saving..." : "Save changes"}
+            </button>
+          </div>
+        </form>
+
+        <div
+          className="absolute bottom-2 right-2 h-4 w-4 cursor-se-resize rounded border border-stone-400/60 bg-white/80 shadow-sm"
+          onPointerDown={handleResizePointerDown}
+          onPointerMove={handleResizePointerMove}
+          onPointerUp={handleResizePointerUp}
+          onPointerCancel={handleResizePointerUp}
+          aria-hidden
+        />
+      </div>
+    </>
   );
 }
