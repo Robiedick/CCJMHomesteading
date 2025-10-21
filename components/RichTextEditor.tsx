@@ -193,7 +193,8 @@ export default function RichTextEditor({
 
   function setFontSize(size: string) {
     if (!editor) return;
-    editor.chain().focus().setMark("textStyle", { fontSize: size }).run();
+    // @ts-expect-error TipTap augments commands at runtime via TextStyle extension
+    editor.chain().focus().setTextStyle({ fontSize: size }).run();
     if (currentStyle?.color) {
       editor.chain().focus().setColor(currentStyle.color).run();
     }
@@ -201,7 +202,8 @@ export default function RichTextEditor({
 
   function clearFontSize() {
     if (!editor) return;
-    editor.chain().focus().unsetMark("textStyle", { fontSize: undefined }).run();
+    // @ts-expect-error TipTap augments commands at runtime via TextStyle extension
+    editor.chain().focus().unsetTextStyle().run();
     if (currentStyle?.color) {
       editor.chain().focus().setColor(currentStyle.color).run();
     }
