@@ -149,6 +149,7 @@ All admin pages export `dynamic = "force-dynamic"` so they always render fresh d
 1. Install dependencies: `npm install`
 2. Set `.env` for local Postgres (or point to Render’s external URL):
    ```
+   DATABASE_PROVIDER="postgresql"
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ccjmhomesteading"
    NEXTAUTH_URL="http://localhost:3000"
    NEXTAUTH_SECRET="local-dev-secret"
@@ -163,6 +164,7 @@ All admin pages export `dynamic = "force-dynamic"` so they always render fresh d
 ### Render Deployment
 Required environment variables:
 ```
+DATABASE_PROVIDER=postgresql
 DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<db>?sslmode=require
 NEXTAUTH_URL=https://<render-service>.onrender.com
 NEXTAUTH_SECRET=<secure random string>
@@ -177,6 +179,19 @@ Post-deploy initialization (on Render shell):
 npx prisma migrate deploy
 npm run seed
 ```
+
+### Local SQLite fallback
+- Create `.env.local` (ignored by Git) with the contents of `.env.local.example`, e.g.:
+  ```
+  DATABASE_PROVIDER=sqlite
+  DATABASE_URL="file:./dev.db"
+  ```
+- Generate a SQLite-ready Prisma client and sync the schema:
+  ```
+  npm run prisma:generate:sqlite
+  npm run prisma:db-push:sqlite
+  ```
+- Full-text search falls back to case-insensitive `contains` queries while running on SQLite.
 
 ## 10. Testing & Tooling
 

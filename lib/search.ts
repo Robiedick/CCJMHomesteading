@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 const SEARCH_LIMIT_DEFAULT = 10;
 const MIN_QUERY_LENGTH = 2;
 
+const databaseProvider = process.env.DATABASE_PROVIDER?.toLowerCase();
+const databaseUrl = process.env.DATABASE_URL?.toLowerCase();
+const isPostgresProvider =
+  databaseProvider === "postgresql" || (!!databaseUrl && databaseUrl.startsWith("postgres"));
+
 const articleVector = Prisma.sql`
   (
     setweight(to_tsvector('simple', coalesce("title", '')), 'A') ||
@@ -51,6 +56,59 @@ export async function searchPublicContent(
 ): Promise<PublicSearchResults> {
   if (query.trim().length < MIN_QUERY_LENGTH) {
     return { articles: [], categories: [] };
+  }
+
+  if (!isPostgresProvider) {
+    const limit = options.limit ?? SEARCH_LIMIT_DEFAULT;
+
+    const articles = options.includeArticles
+      ? await prisma.article.findMany({
+          where: {
+            published: true,
+            OR: [
+              { title: { contains: query, mode: "insensitive" } },
+              { excerpt: { contains: query, mode: "insensitive" } },
+              { content: { contains: query, mode: "insensitive" } },
+            ],
+          },
+          orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+          take: limit,
+        })
+      : [];
+
+    const categories = options.includeCategories
+      ? await prisma.category.findMany({
+          where: {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { description: { contains: query, mode: "insensitive" } },
+            ],
+          },
+          orderBy: [{ name: "asc" }],
+          take: limit,
+        })
+      : [];
+
+    return {
+      articles: articles.map((article) => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        snippet:
+          article.excerpt && article.excerpt.trim().length > 0
+            ? article.excerpt.trim()
+            : article.content.slice(0, 200),
+        publishedAt: article.publishedAt,
+        rank: 0,
+      })),
+      categories: categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description ?? null,
+        rank: 0,
+      })),
+    };
   }
 
   const tsQuery = Prisma.sql`plainto_tsquery('simple', ${query})`;
@@ -149,6 +207,81 @@ export type AdminSearchResults = {
 export async function searchAdminEntities(query: string): Promise<AdminSearchResults> {
   if (query.trim().length < MIN_QUERY_LENGTH) {
     return { articles: [], categories: [], users: [], invitations: [] };
+  }
+
+  if (!isPostgresProvider) {
+    const articles = await prisma.article.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { excerpt: { contains: query, mode: "insensitive" } },
+          { content: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: [{ updatedAt: "desc" }],
+      take: 25,
+    });
+
+    const categories = await prisma.category.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: [{ name: "asc" }],
+      take: 25,
+    });
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: query, mode: "insensitive" } },
+          { usernameNormalized: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: [{ username: "asc" }],
+      take: 25,
+    });
+
+    const invitations = await prisma.invitation.findMany({
+      where: {
+        OR: [
+          { email: { contains: query, mode: "insensitive" } },
+          { token: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: [{ createdAt: "desc" }],
+      take: 25,
+    });
+
+    return {
+      articles: articles.map((article) => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        published: article.published,
+        rank: 0,
+      })),
+      categories: categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        rank: 0,
+      })),
+      users: users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      })),
+      invitations: invitations.map((invite) => ({
+        id: invite.id,
+        email: invite.email,
+        token: invite.token,
+        expiresAt: invite.expiresAt,
+        usedAt: invite.usedAt,
+      })),
+    };
   }
 
   const tsQuery = Prisma.sql`plainto_tsquery('simple', ${query})`;

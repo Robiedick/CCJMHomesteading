@@ -9,24 +9,29 @@ import { searchPublicContent, minimumSearchCharacters } from "@/lib/search";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 
 type HomePageProps = {
-  params: { locale: Locale };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: Locale }> | { locale: Locale };
+  searchParams?:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage({ params, searchParams }: HomePageProps) {
-  const { locale } = params;
+  const resolvedParams = await params;
+  const { locale } = resolvedParams;
   if (!locales.includes(locale)) {
     notFound();
   }
 
   const content = await getHomepageContent(locale);
 
-  const rawQuery = typeof searchParams?.q === "string" ? searchParams.q : "";
+  const resolvedSearchParams = (await searchParams) ?? {};
+
+  const rawQuery = typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q : "";
   const searchQuery = rawQuery?.trim() ?? "";
 
-  const rawTypes = searchParams?.types;
+  const rawTypes = resolvedSearchParams.types;
   const requestedTypes = new Set<string>();
   if (Array.isArray(rawTypes)) {
     rawTypes.forEach((value) => {

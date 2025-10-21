@@ -1,0 +1,145 @@
+// SQLite-specific schema for local development
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  color       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  articles    Article[]
+}
+
+model Article {
+  id          Int        @id @default(autoincrement())
+  title       String
+  slug        String     @unique
+  excerpt     String?
+  content     String
+  published   Boolean    @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  categories  Category[]
+}
+
+model User {
+  id                 Int          @id @default(autoincrement())
+  username           String       @unique
+  usernameNormalized String?      @unique
+  passwordHash       String
+  role               UserRole     @default(user)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  createdInvitations Invitation[] @relation("CreatedInvitations")
+  consumedInvitations Invitation[] @relation("ConsumedInvitation")
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+model Invitation {
+  id           Int       @id @default(autoincrement())
+  token        String    @unique
+  email        String?
+  role         UserRole  @default(user)
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime?
+  usedAt       DateTime?
+  createdById  Int?
+  createdBy    User?     @relation("CreatedInvitations", fields: [createdById], references: [id])
+  consumedById Int?
+  consumedBy   User?     @relation("ConsumedInvitation", fields: [consumedById], references: [id])
+}
+
+model HomepageContent {
+  id                       Int      @id @default(autoincrement())
+  locale                   String   @unique
+  siteName                 String   @default("")
+  siteAdminTitle           String   @default("")
+  siteAdminSubtitle        String   @default("")
+  siteBackToHomeLabel      String   @default("")
+  siteLogoUrl              String   @default("")
+  heroImageUrl             String   @default("")
+  navTagline               String
+  navLatestStoriesLabel    String
+  navSignInLabel           String
+  heroTitle                String
+  heroDescription          String
+  heroCtaPrimaryLabel      String
+  heroCtaSecondaryLabel    String
+  heroEditorTitle          String
+  heroEditorDescription    String
+  heroEditorLinkLabel      String
+  switcherLabel            String
+  switcherEnglishLabel     String
+  switcherDutchLabel       String
+  topicsTitle              String
+  topicsDescription        String
+  topicsEmpty              String
+  topicsCountSingular      String
+  topicsCountPlural        String
+  storiesTitle             String
+  storiesDescription       String
+  storiesEmpty             String
+  storiesCountLabel        String
+  storiesCountSingular     String
+  storiesCountPlural       String
+  storiesReadMore          String
+  storiesUncategorized     String
+  articleBackLabel         String   @default("")
+  articleUpdatedLabel      String   @default("")
+  articlePublishedLabel    String   @default("")
+  categoryHeaderLabel      String   @default("")
+  categoryEmptyLabel       String   @default("")
+  loginUsernameLabel       String   @default("")
+  loginUsernamePlaceholder String   @default("")
+  loginPasswordLabel       String   @default("")
+  loginPasswordPlaceholder String   @default("")
+  loginSignInButtonLabel   String   @default("")
+  loginSigningInLabel      String   @default("")
+  loginSessionExpiredMessage String @default("")
+  loginInvalidCredentialsMessage String @default("")
+  loginSuccessMessage      String   @default("")
+  loginLoadingMessage      String   @default("")
+  searchTitle              String   @default("")
+  searchPlaceholder        String   @default("")
+  searchNoResults          String   @default("")
+  searchArticlesHeading    String   @default("")
+  searchCategoriesHeading  String   @default("")
+  searchFiltersLabel       String   @default("")
+  searchFilterArticlesLabel String  @default("")
+  searchFilterCategoriesLabel String @default("")
+  searchClearLabel         String   @default("")
+  searchButtonLabel        String   @default("")
+  searchResultsHeadingTemplate String @default("")
+  searchMinimumCharactersMessage String @default("")
+  footerNote               String
+  footerSignature          String
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model HomepagePreset {
+  id        Int      @id @default(autoincrement())
+  locale    String
+  name      String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locale])
+  @@unique([locale, name])
+}
