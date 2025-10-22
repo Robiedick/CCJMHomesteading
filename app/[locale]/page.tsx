@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import type { CSSProperties } from "react";
+import clsx from "clsx";
 import SearchFlyout from "@/components/SearchFlyout";
+import StoryGrid from "@/components/StoryGrid";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { locales, type Locale } from "@/lib/i18n";
@@ -20,6 +21,45 @@ type HomePageProps = {
 export const dynamic = "force-dynamic";
 
 const STORIES_PER_PAGE = 6;
+
+const accentLetterPattern = /[A-ZÀ-ÖØ-Þ]/;
+
+function AnimatedHeroTitle({ text }: { text: string }) {
+  const letters = Array.from(text);
+
+  return (
+    <h1
+      className="hero-title relative text-4xl font-semibold leading-tight text-stone-900 sm:text-5xl"
+      aria-label={text}
+    >
+      <span className="sr-only">{text}</span>
+      <span aria-hidden className="hero-title-layer">
+        {letters.map((char, index) => {
+          if (char === "\n") {
+            return <br key={`break-${index}`} />;
+          }
+          if (char === " ") {
+            return (
+              <span key={`space-${index}`} className="hero-title-space">
+                &nbsp;
+              </span>
+            );
+          }
+          const isAccent = accentLetterPattern.test(char);
+          return (
+            <span
+              key={`${char}-${index}`}
+              className={clsx("hero-title-char", isAccent && "hero-title-char-accent")}
+              style={isAccent ? { animationDelay: `${index * 90}ms` } : undefined}
+            >
+              {char}
+            </span>
+          );
+        })}
+      </span>
+    </h1>
+  );
+}
 
 export default async function HomePage({ params, searchParams }: HomePageProps) {
   const resolvedParams = await params;
@@ -136,6 +176,34 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
   const paginationSummary =
     totalArticles === 0 ? "0 / 0" : `${pageStart}\u2013${pageEnd} / ${totalArticles}`;
 
+  const articleCards = visibleArticles.map((article) => {
+    const primaryCategory = article.categories[0];
+    const categoryColor = primaryCategory?.color ?? "#047857";
+    const categoryLabel =
+      article.categories.length > 0
+        ? article.categories.map((category) => category.name).join(" · ")
+        : content.storiesUncategorized;
+    const rawExcerpt = article.excerpt ?? article.content;
+    const truncatedContent = article.content.slice(0, 200);
+    const displayExcerpt =
+      article.excerpt ?? `${truncatedContent}${article.content.length > 200 ? "…" : ""}`;
+    const cleanOverlay = rawExcerpt.replace(/\s+/g, " ").trim();
+    const overlaySource = cleanOverlay.length > 0 ? cleanOverlay : article.title;
+    const overlayText = `${overlaySource} ${overlaySource}`.slice(0, 260);
+
+    return {
+      id: article.id,
+      slug: article.slug,
+      title: article.title,
+      content: article.content,
+      excerpt: displayExcerpt,
+      overlayText,
+      categoryColor,
+      categoryLabel,
+      formattedDate: formatDate(article.publishedAt ?? article.createdAt, locale),
+    };
+  });
+
   const storyCountLabel =
     totalArticles === 1
       ? content.storiesCountSingular
@@ -220,18 +288,15 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                 {content.navSignInLabel}
               </Link>
             </nav>
-            <div
-              id="topics"
-              className="mt-10 space-y-4 rounded-3xl border border-white/70 bg-white/90 p-5 shadow-xl shadow-stone-900/15"
-            >
+            <div id="topics" className="mt-10 space-y-4">
               <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-stone-400">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-600">
                   {content.topicsTitle}
                 </h2>
                 <p className="mt-2 text-xs text-stone-500">{content.topicsDescription}</p>
               </div>
               {categories.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-stone-200 bg-white/70 px-3 py-3 text-xs text-stone-500">
+                <p className="rounded-xl border border-dashed border-stone-300 bg-white/70 px-3 py-3 text-xs text-stone-500">
                   {content.topicsEmpty}
                 </p>
               ) : (
@@ -240,9 +305,9 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                     <li key={category.id}>
                       <Link
                         href={`/${locale}/categories/${category.slug}`}
-                        className="group flex items-center justify-between gap-3 rounded-2xl border border-stone-200/80 bg-white px-3 py-2 text-xs font-medium text-stone-600 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
+                        className="group flex items-center justify-between gap-3 rounded-xl border border-stone-200/60 bg-white/90 px-3 py-2 text-xs font-medium text-stone-600 shadow-sm transition hover:border-emerald-200 hover:bg-white hover:text-emerald-700"
                       >
-                        <span className="flex items-center gap-2 text-sm font-medium text-stone-700 transition group-hover:text-emerald-700">
+                        <span className="flex items-center gap-2 text-[0.9rem] font-medium text-stone-700 transition group-hover:text-emerald-700">
                           <span
                             className="inline-block h-2.5 w-2.5 rounded-full"
                             style={{
@@ -267,9 +332,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           <div className="flex-1 space-y-12">
             <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/90 p-10 shadow-2xl shadow-stone-900/15 backdrop-blur lg:grid-cols-[1.7fr_1fr] lg:p-12 animate-fade-up">
               <div>
-                <h1 className="text-4xl font-semibold leading-tight text-stone-900 sm:text-5xl">
-                  {content.heroTitle}
-                </h1>
+                <AnimatedHeroTitle text={content.heroTitle} />
                 <p className="mt-6 text-lg text-stone-600">
                   {content.heroDescription}
                 </p>
@@ -340,70 +403,12 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                   </div>
                 ) : (
                   <>
-                    <div className="mt-8 grid gap-6 md:grid-cols-2">
-                      {visibleArticles.map((article) => {
-                      const primaryCategory = article.categories[0];
-                      const categoryColor = primaryCategory?.color ?? "#047857";
-                      const categoryLabel =
-                        article.categories.length > 0
-                          ? article.categories.map((category) => category.name).join(" · ")
-                          : content.storiesUncategorized;
-                      const rawExcerpt = article.excerpt ?? article.content;
-                      const truncatedContent = article.content.slice(0, 200);
-                      const displayExcerpt =
-                        article.excerpt ??
-                        `${truncatedContent}${article.content.length > 200 ? "…" : ""}`;
-                      const cleanOverlay = rawExcerpt.replace(/\s+/g, " ").trim();
-                      const overlaySource = cleanOverlay.length > 0 ? cleanOverlay : article.title;
-                      const overlayText = `${overlaySource} ${overlaySource}`.slice(0, 260);
-
-                      const cardStyle: CSSProperties = { borderColor: categoryColor };
-
-                      return (
-                        <article
-                          key={article.id}
-                          className="group flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-lg shadow-stone-300/40 transition hover:-translate-y-1 hover:shadow-2xl"
-                          style={cardStyle}
-                        >
-                          <div
-                            className="relative overflow-hidden px-6 py-3 transition group-hover:brightness-95"
-                            style={{ backgroundColor: categoryColor }}
-                          >
-                            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-                              <p
-                                aria-hidden="true"
-                                className="absolute inset-x-6 -top-10 flex h-[220%] flex-col justify-start whitespace-pre-wrap text-3xl font-semibold uppercase leading-tight text-white/5 opacity-70 group-hover:[animation:article-card-scroll_12s_ease-in-out_infinite] motion-reduce:[animation:none!important]"
-                              >
-                                {overlayText}
-                              </p>
-                            </div>
-                            <div className="relative z-10 space-y-1">
-                              <div className="flex flex-wrap gap-1 text-[0.4rem] font-semibold uppercase tracking-[0.3em] text-white/75 sm:text-[0.55rem]">
-                                {categoryLabel}
-                              </div>
-                              <h3 className="text-sm font-semibold text-white sm:text-base">
-                                {article.title}
-                              </h3>
-                            </div>
-                          </div>
-                          <div className="flex flex-1 flex-col justify-between px-6 pb-6 pt-5">
-                            <p className="text-sm leading-relaxed text-stone-600">{displayExcerpt}</p>
-                            <div className="mt-6 flex items-center justify-between text-sm text-stone-500">
-                              <span>
-                                {formatDate(article.publishedAt ?? article.createdAt, locale)}
-                              </span>
-                              <Link
-                                href={`/${locale}/articles/${article.slug}`}
-                                className="font-semibold text-emerald-600 transition hover:text-emerald-700"
-                              >
-                                {content.storiesReadMore}
-                              </Link>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                      })}
-                    </div>
+                    <StoryGrid
+                      articles={articleCards}
+                      locale={locale}
+                      readMoreLabel={content.storiesReadMore}
+                      storyBackLabel={content.articleBackLabel}
+                    />
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-xs font-medium tracking-wider text-stone-400">
                         {paginationSummary}
