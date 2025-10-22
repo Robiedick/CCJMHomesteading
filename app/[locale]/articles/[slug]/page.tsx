@@ -96,25 +96,45 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
+  const primaryCategory = article.categories[0];
+  const headerStyle = primaryCategory
+    ? { backgroundColor: primaryCategory.color ?? "#047857" }
+    : undefined;
+
   return (
     <div className="min-h-screen bg-stone-50/80 text-stone-900">
-      <header className="border-b border-stone-200 bg-white/80 backdrop-blur">
+      <header
+        className={`border-b ${
+          primaryCategory ? "border-transparent" : "border-stone-200 bg-white/80 backdrop-blur"
+        }`}
+        style={headerStyle}
+      >
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-16">
           <Link
             href={`/${locale}`}
-            className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
+            className={`text-sm font-semibold ${
+              primaryCategory ? "text-white/80 hover:text-white" : "text-emerald-600 hover:text-emerald-700"
+            }`}
           >
             {content.articleBackLabel}
           </Link>
-          <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
+          <div
+            className={`flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] ${
+              primaryCategory ? "text-white/70" : "text-emerald-600"
+            }`}
+          >
             {article.categories.length > 0
               ? article.categories.map((category) => category.name).join(" · ")
               : content.storiesUncategorized}
           </div>
-          <h1 className="text-4xl font-semibold text-stone-900 sm:text-5xl">
+          <h1
+            className={`text-4xl font-semibold sm:text-5xl ${
+              primaryCategory ? "text-white" : "text-stone-900"
+            }`}
+          >
             {article.title}
           </h1>
-          <p className="text-sm text-stone-500">
+          <p className={`text-sm ${primaryCategory ? "text-white/70" : "text-stone-500"}`}>
             {content.articleUpdatedLabel} {formatDate(article.updatedAt, locale)} ·{" "}
             {content.articlePublishedLabel}{" "}
             {formatDate(article.publishedAt ?? article.createdAt, locale)}
