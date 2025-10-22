@@ -96,7 +96,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
       <div className="absolute inset-0 bg-gradient-to-b from-white/92 via-white/88 to-white/94 backdrop-blur-sm" />
       <div className="relative">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-10 lg:flex-row">
-          <aside className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-lg shadow-emerald-100/40 backdrop-blur lg:sticky lg:top-12 lg:h-fit lg:w-72 animate-fade-up">
+          <aside className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-stone-900/15 backdrop-blur lg:sticky lg:top-12 lg:h-fit lg:w-72 animate-fade-up">
             <div>
               {content.siteLogoUrl ? (
                 <Image
@@ -137,7 +137,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
             </nav>
           </aside>
           <div className="flex-1 space-y-12">
-            <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/85 p-10 shadow-xl shadow-emerald-100/40 backdrop-blur lg:grid-cols-[1.7fr_1fr] lg:p-12 animate-fade-up">
+            <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/90 p-10 shadow-2xl shadow-stone-900/15 backdrop-blur lg:grid-cols-[1.7fr_1fr] lg:p-12 animate-fade-up">
               <div>
                 <h1 className="text-4xl font-semibold leading-tight text-stone-900 sm:text-5xl">
                   {content.heroTitle}
@@ -188,7 +188,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
               </div>
             </header>
 
-            <section className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-lg shadow-emerald-100/40 backdrop-blur animate-fade-up">
+            <section className="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-2xl shadow-stone-900/12 backdrop-blur animate-fade-up">
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
