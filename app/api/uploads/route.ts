@@ -18,6 +18,21 @@ cloudinary.config({
 });
 
 export async function POST(request: Request) {
+  // Debug: Check if Cloudinary is configured
+  if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 
+      !process.env.CLOUDINARY_API_KEY || 
+      !process.env.CLOUDINARY_API_SECRET) {
+    console.error('Cloudinary env vars missing:', {
+      cloudName: !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      apiKey: !!process.env.CLOUDINARY_API_KEY,
+      apiSecret: !!process.env.CLOUDINARY_API_SECRET,
+    });
+    return NextResponse.json(
+      { message: "Server configuration error. Check Cloudinary credentials." },
+      { status: 500 }
+    );
+  }
+  
   const session = await getServerAuthSession();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
