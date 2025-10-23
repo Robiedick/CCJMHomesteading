@@ -355,6 +355,7 @@ export default function RichTextEditor({
           ? window.prompt("Describe this image (alt text)", defaultAlt || "Image")
           : defaultAlt;
       const altText = (altInput ?? defaultAlt ?? "Image").trim() || "Image";
+      if (!editor) return;
       editor.chain().focus().setImage({ src: payload.url, alt: altText }).run();
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Failed to upload image.");

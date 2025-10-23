@@ -5,9 +5,9 @@ import { locales, type Locale } from "@/lib/i18n";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } },
+  context: { params: Promise<{ slug: string }> },
 ) {
-  const slug = params.slug;
+  const { slug } = await context.params;
   const { searchParams } = new URL(request.url);
   const localeParam = searchParams.get("locale");
   const locale = locales.includes(localeParam as Locale) ? (localeParam as Locale) : locales[0];

@@ -230,6 +230,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
     articlesHeading: content.searchArticlesHeading,
     categoriesHeading: content.searchCategoriesHeading,
     noResults: content.searchNoResults,
+    resultsHeadingTemplate: content.searchResultsHeadingTemplate,
   };
 
   return (
@@ -376,9 +377,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                   <>
                     <StoryGrid
                       articles={articleCards}
-                      locale={locale}
                       readMoreLabel={content.storiesReadMore}
-                      storyBackLabel={content.articleBackLabel}
                     />
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-xs font-medium tracking-wider text-stone-400">
