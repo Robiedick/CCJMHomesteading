@@ -57,7 +57,7 @@ export default async function LoginPage() {
               Homestead tools
             </p>
             <p>
-              Manage articles, categories, and the homepage copy with the same calm cadence as the
+              Manage articles, categories, and homepage copy with the same calm cadence as the
               rest of the site. Your changes go live instantly for both English and Dutch readers.
             </p>
           </div>
