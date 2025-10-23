@@ -11,6 +11,9 @@ const ALLOWED_TYPES = new Set([
   "image/svg+xml",
 ]);
 
+// Force Node.js runtime instead of Edge runtime
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   // Configure Cloudinary at runtime (not build time)
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
@@ -23,6 +26,7 @@ export async function POST(request: Request) {
       cloudName: !!cloudName,
       apiKey: !!apiKey,
       apiSecret: !!apiSecret,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('CLOUD')),
     });
     return NextResponse.json(
       { message: "Server configuration error. Check Cloudinary credentials." },
