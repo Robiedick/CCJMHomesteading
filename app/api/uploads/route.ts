@@ -2,12 +2,18 @@ import { promises as fs } from "node:fs";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { getServerAuthSession } from "@/lib/auth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
 const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"]);
 
 export async function POST(request: Request) {
+  const session = await getServerAuthSession();
+  if (!session?.user || session.user.role !== "admin") {
+    return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
 

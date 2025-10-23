@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import StoryGrid from "@/components/StoryGrid";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { locales, type Locale } from "@/lib/i18n";
@@ -33,6 +34,34 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   if (!category) {
     notFound();
   }
+
+  const articleCards = category.articles.map((article) => {
+    const primaryCategory = article.categories[0];
+    const categoryColor = primaryCategory?.color ?? "#047857";
+    const categoryLabel =
+      article.categories.length > 0
+        ? article.categories.map((categoryItem) => categoryItem.name).join(" · ")
+        : content.storiesUncategorized;
+    const rawExcerpt = article.excerpt ?? article.content;
+    const truncatedContent = article.content.slice(0, 200);
+    const excerpt =
+      article.excerpt ?? `${truncatedContent}${article.content.length > 200 ? "…" : ""}`;
+    const cleanOverlay = rawExcerpt.replace(/\s+/g, " ").trim();
+    const overlaySource = cleanOverlay.length > 0 ? cleanOverlay : article.title;
+    const overlayText = `${overlaySource} ${overlaySource}`.slice(0, 260);
+
+    return {
+      id: article.id,
+      slug: article.slug,
+      title: article.title,
+      content: article.content,
+      excerpt,
+      overlayText,
+      categoryColor,
+      categoryLabel,
+      formattedDate: formatDate(article.publishedAt ?? article.createdAt, locale),
+    };
+  });
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900">
@@ -68,44 +97,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             {content.categoryEmptyLabel}
           </div>
         ) : (
-          <div className="space-y-6">
-            {category.articles.map((article) => (
-              <article
-                key={article.id}
-                className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-stone-900">
-                      {article.title}
-                    </h2>
-                    <p className="mt-2 text-sm text-stone-600">
-                      {article.excerpt ??
-                        article.content.slice(0, 200).concat(
-                          article.content.length > 200 ? "…" : "",
-                        )}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-600">
-                      {article.categories
-                        .map((categoryItem) => categoryItem.name)
-                        .join(" · ")}
-                    </div>
-                  </div>
-                  <p className="text-sm text-stone-500">
-                    {formatDate(article.publishedAt ?? article.createdAt, locale)}
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <Link
-                    href={`/${locale}/articles/${article.slug}`}
-                    className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
-                  >
-                    {content.storiesReadMore}
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
+          <StoryGrid articles={articleCards} readMoreLabel={content.storiesReadMore} />
         )}
       </main>
     </div>

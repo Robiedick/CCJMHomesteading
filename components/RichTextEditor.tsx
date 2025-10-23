@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ChangeEvent, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type ComponentType } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -9,7 +9,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TextStyle from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { Markdown } from "tiptap-markdown";
-import { Extension } from "@tiptap/core";
+import { Extension, mergeAttributes } from "@tiptap/core";
+import Image from "@tiptap/extension-image";
 import {
   Bold,
   Italic,
@@ -26,6 +27,7 @@ import {
   Palette,
   Type,
   Eraser,
+  Image as ImageIcon,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -63,6 +65,51 @@ const FontSize = Extension.create({
   },
 });
 
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: "100%",
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("data-width") ?? element.style.width ?? "100%",
+      },
+      height: {
+        default: null,
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("data-height") ?? element.style.height ?? null,
+      },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    const attrs = { ...HTMLAttributes } as Record<string, string | undefined>;
+    const width = attrs.width;
+    const height = attrs.height;
+    delete attrs.width;
+    delete attrs.height;
+
+    const styleParts: string[] = [];
+    if (width) {
+      styleParts.push(`width: ${width}`);
+      attrs["data-width"] = width;
+    }
+    if (height) {
+      styleParts.push(`height: ${height}`);
+      attrs["data-height"] = height;
+    } else {
+      delete attrs["data-height"];
+    }
+
+    if (styleParts.length > 0) {
+      attrs.style = attrs.style ? `${attrs.style}; ${styleParts.join("; ")}` : styleParts.join("; ");
+    }
+
+    attrs.class = clsx("max-w-full h-auto rounded-xl my-6 shadow", attrs.class);
+
+    return ["img", mergeAttributes(this.options.HTMLAttributes, attrs)];
+  },
+});
+
 function useMarkdownEditor(initialMarkdown: string, onChange: (markdown: string) => void, placeholder?: string) {
   const editor = useEditor({
     extensions: [
@@ -75,6 +122,7 @@ function useMarkdownEditor(initialMarkdown: string, onChange: (markdown: string)
       TextStyle,
       Color,
       FontSize,
+      ResizableImage.configure({ inline: false, allowBase64: true }),
       Underline,
       Link.configure({
         autolink: true,
@@ -134,6 +182,67 @@ export default function RichTextEditor({
   className,
 }: RichTextEditorProps) {
   const editor = useMarkdownEditor(value, onChange, placeholder);
+  const [imageSelected, setImageSelected] = useState(false);
+  const [imageWidth, setImageWidth] = useState(100);
+  const [imageHeight, setImageHeight] = useState<number | null>(null);
+  const [lockImageRatio, setLockImageRatio] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const applyImageAttributes = (nextWidth: number | null, nextHeight: number | null, lockRatio: boolean) => {
+    if (!editor) return;
+    const attributes: Record<string, string | null> = {};
+    if (nextWidth !== null) {
+      attributes.width = `${nextWidth}%`;
+    }
+    if (lockRatio) {
+      attributes.height = null;
+    } else if (nextHeight !== null) {
+      attributes.height = `${nextHeight}%`;
+    }
+    editor.chain().focus().updateAttributes("image", attributes).run();
+  };
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateImageState = () => {
+      if (editor.isActive("image")) {
+        setImageSelected(true);
+        const attrs = editor.getAttributes("image") as { width?: string; height?: string };
+        const widthValue = attrs.width ? Number.parseFloat(String(attrs.width).replace("%", "")) : 100;
+        setImageWidth(Number.isFinite(widthValue) ? widthValue : 100);
+
+        if (attrs.height) {
+          const heightValue = Number.parseFloat(String(attrs.height).replace("%", ""));
+          if (Number.isFinite(heightValue)) {
+            setImageHeight(heightValue);
+            setLockImageRatio(false);
+          } else {
+            setImageHeight(null);
+            setLockImageRatio(true);
+          }
+        } else {
+          setImageHeight(null);
+          setLockImageRatio(true);
+        }
+      } else {
+        setImageSelected(false);
+        setImageHeight(null);
+        setLockImageRatio(true);
+      }
+    };
+
+    editor.on("selectionUpdate", updateImageState);
+    editor.on("transaction", updateImageState);
+    updateImageState();
+
+    return () => {
+      editor.off("selectionUpdate", updateImageState);
+      editor.off("transaction", updateImageState);
+    };
+  }, [editor]);
 
   if (!editor) {
     return (
@@ -209,6 +318,54 @@ export default function RichTextEditor({
     }
   }
 
+  async function handleImageSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    const maxSize = 8 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setUploadError("Image is too large (max 8MB).");
+      event.target.value = "";
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploadingImage(true);
+    try {
+      const response = await fetch("/api/uploads", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        let message = "Failed to upload image.";
+        try {
+          const payload = (await response.json()) as { message?: string };
+          if (payload.message) message = payload.message;
+        } catch {
+          // ignore
+        }
+        setUploadError(message);
+        return;
+      }
+      const payload = (await response.json()) as { url: string };
+      setUploadError(null);
+      const defaultAlt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+      const altInput =
+        typeof window !== "undefined"
+          ? window.prompt("Describe this image (alt text)", defaultAlt || "Image")
+          : defaultAlt;
+      const altText = (altInput ?? defaultAlt ?? "Image").trim() || "Image";
+      editor.chain().focus().setImage({ src: payload.url, alt: altText }).run();
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Failed to upload image.");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   return (
     <div className={clsx("flex w-full flex-col gap-2", className)}>
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -267,6 +424,74 @@ export default function RichTextEditor({
           Link2,
           editor.isActive("link") ? "Edit link" : "Insert link",
         )}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={clsx(buttonBaseClasses, uploadingImage && "opacity-70")}
+          aria-label="Insert image"
+          disabled={uploadingImage}
+        >
+          <ImageIcon className={clsx("h-4 w-4", uploadingImage && "animate-pulse")} />
+        </button>
+        {imageSelected ? (
+          <div className="flex min-w-[220px] flex-1 flex-col gap-2 border-l border-stone-200 pl-3 text-xs text-stone-500">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold uppercase tracking-[0.25em] text-stone-400">Width</span>
+              <input
+                type="range"
+                min={20}
+                max={100}
+                value={imageWidth}
+                onChange={(event) => {
+                  const value = Number.parseInt(event.target.value, 10);
+                  setImageWidth(value);
+                  applyImageAttributes(value, imageHeight, lockImageRatio);
+                }}
+                className="h-2 flex-1 cursor-pointer accent-emerald-600"
+              />
+              <span className="font-semibold text-stone-600">{imageWidth}%</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="flex items-center gap-2 font-semibold uppercase tracking-[0.25em] text-stone-400">
+                <input
+                  type="checkbox"
+                  checked={lockImageRatio}
+                  onChange={() => {
+                    const next = !lockImageRatio;
+                    setLockImageRatio(next);
+                    if (next) {
+                      setImageHeight(null);
+                      applyImageAttributes(imageWidth, null, true);
+                    } else {
+                      const fallback = imageHeight ?? imageWidth;
+                      setImageHeight(fallback);
+                      applyImageAttributes(imageWidth, fallback, false);
+                    }
+                  }}
+                />
+                Keep ratio
+              </label>
+              {!lockImageRatio ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[0.7rem] uppercase tracking-[0.25em] text-stone-400">Height</span>
+                  <input
+                    type="range"
+                    min={20}
+                    max={150}
+                    value={imageHeight ?? imageWidth}
+                    onChange={(event) => {
+                      const value = Number.parseInt(event.target.value, 10);
+                      setImageHeight(value);
+                      applyImageAttributes(imageWidth, value, false);
+                    }}
+                    className="h-2 flex-1 cursor-pointer accent-emerald-600"
+                  />
+                  <span className="font-semibold text-stone-600">{imageHeight ?? imageWidth}%</span>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         <div className="ml-auto flex flex-wrap items-center gap-3 border-l border-stone-200 pl-3">
           <div className="flex gap-2">
             {toolbarButton(() => editor.chain().focus().undo().run(), false, Undo2, "Undo", !editor.can().undo())}
@@ -314,6 +539,14 @@ export default function RichTextEditor({
           </div>
         </div>
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageSelect}
+      />
+      {uploadError ? <p className="text-xs text-red-600">{uploadError}</p> : null}
       <div className="flex-1 overflow-hidden">
         <EditorContent id={id} editor={editor} />
       </div>

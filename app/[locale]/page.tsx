@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import clsx from "clsx";
 import SearchFlyout from "@/components/SearchFlyout";
 import StoryGrid from "@/components/StoryGrid";
+import CategoriesSidebar from "@/components/CategoriesSidebar";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { locales, type Locale } from "@/lib/i18n";
@@ -204,19 +205,18 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
     };
   });
 
+  const sidebarCategories = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    color: category.color,
+    articleCount: category.articles.length,
+  }));
+
   const storyCountLabel =
     totalArticles === 1
       ? content.storiesCountSingular
       : content.storiesCountPlural;
-
-  const topicsCountSingular = content.topicsCountSingular;
-  const topicsCountPlural = content.topicsCountPlural;
-  const hasActiveQuery = searchQuery.length > 0;
-  const showMinimumCharactersHint =
-    hasActiveQuery && !shouldSearch && searchQuery.length > 0;
-  const resultsHeading = content.searchResultsHeadingTemplate.includes("{{query}}")
-    ? content.searchResultsHeadingTemplate.replace(/{{query}}/g, searchQuery)
-    : `${content.searchResultsHeadingTemplate} “${searchQuery}”`;
 
   const searchLabels = {
     title: content.searchTitle,
@@ -240,97 +240,68 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
         searchQuery={searchQuery}
         includeArticles={includeArticles}
         includeCategories={includeCategories}
-        showMinimumCharactersHint={showMinimumCharactersHint}
-        shouldSearch={shouldSearch}
-        hasActiveQuery={hasActiveQuery}
-        resultsHeading={resultsHeading}
         searchResults={searchResults}
         labels={searchLabels}
       />
       <div className="relative">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-10 lg:flex-row">
-          <aside className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-stone-900/15 backdrop-blur lg:sticky lg:top-12 lg:h-fit lg:w-72 animate-fade-up">
-            <div>
-              {content.siteLogoUrl ? (
-                <Image
-                  src={content.siteLogoUrl}
-                  alt={content.siteName}
-                  width={64}
-                  height={64}
-                  className="h-12 w-12 rounded-xl shadow-sm"
-                  unoptimized
-                />
-              ) : null}
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
-                {content.siteName}
-              </p>
-              <p className="mt-2 text-sm text-stone-500">{content.navTagline}</p>
-            </div>
-            <nav className="mt-6 flex flex-col gap-3 text-sm">
-              <LocaleSwitcher
-                currentLocale={locale}
-                labels={{
-                  label: content.switcherLabel,
-                  english: content.switcherEnglishLabel,
-                  dutch: content.switcherDutchLabel,
-                }}
-              />
-              <Link
-                href={`/${locale}#stories`}
-                className="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-white/80 px-4 py-2 font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-white"
-              >
-                {content.navLatestStoriesLabel}
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
-              >
-                {content.navSignInLabel}
-              </Link>
-            </nav>
-            <div id="topics" className="mt-10 space-y-4">
+        <div className="mx-auto flex w/full max-w-7xl flex-col gap-8 px-6 py-10 lg:flex-row">
+          <div className="flex w/full flex-col gap-6 lg:w-72 lg:flex-none">
+            <aside className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-stone-900/15 backdrop-blur animate-fade-up">
               <div>
-                <h2 className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-600">
-                  {content.topicsTitle}
-                </h2>
-                <p className="mt-2 text-xs text-stone-500">{content.topicsDescription}</p>
-              </div>
-              {categories.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-stone-300 bg-white/70 px-3 py-3 text-xs text-stone-500">
-                  {content.topicsEmpty}
+                {content.siteLogoUrl ? (
+                  <Image
+                    src={content.siteLogoUrl}
+                    alt={content.siteName}
+                    width={64}
+                    height={64}
+                    className="h-12 w-12 rounded-xl shadow-sm"
+                    unoptimized
+                  />
+                ) : null}
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
+                  {content.siteName}
                 </p>
-              ) : (
-                <ul className="space-y-2">
-                  {categories.map((category) => (
-                    <li key={category.id}>
-                      <Link
-                        href={`/${locale}/categories/${category.slug}`}
-                        className="group flex items-center justify-between gap-3 rounded-xl border border-stone-200/60 bg-white/90 px-3 py-2 text-xs font-medium text-stone-600 shadow-sm transition hover:border-emerald-200 hover:bg-white hover:text-emerald-700"
-                      >
-                        <span className="flex items-center gap-2 text-[0.9rem] font-medium text-stone-700 transition group-hover:text-emerald-700">
-                          <span
-                            className="inline-block h-2.5 w-2.5 rounded-full"
-                            style={{
-                              backgroundColor: category.color ?? "#65a30d",
-                            }}
-                          />
-                          {category.name}
-                        </span>
-                        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] text-stone-500 transition group-hover:bg-white group-hover:text-emerald-700">
-                          {category.articles.length}{" "}
-                          {category.articles.length === 1
-                            ? topicsCountSingular
-                            : topicsCountPlural}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </aside>
+                <p className="mt-2 text-sm text-stone-500">{content.navTagline}</p>
+              </div>
+              <nav className="mt-6 flex flex-col gap-3 text-sm">
+                <LocaleSwitcher
+                  currentLocale={locale}
+                  labels={{
+                    label: content.switcherLabel,
+                    english: content.switcherEnglishLabel,
+                    dutch: content.switcherDutchLabel,
+                  }}
+                />
+                <Link
+                  href={`/${locale}#stories`}
+                  className="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-white/80 px-4 py-2 font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-white"
+                >
+                  {content.navLatestStoriesLabel}
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  {content.navSignInLabel}
+                </Link>
+              </nav>
+            </aside>
+
+            <aside className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-stone-900/15 backdrop-blur">
+              <CategoriesSidebar
+                categories={sidebarCategories}
+                locale={locale}
+                description={content.topicsDescription}
+                title={content.topicsTitle}
+                emptyLabel={content.topicsEmpty}
+                countSingular={content.topicsCountSingular}
+                countPlural={content.topicsCountPlural}
+                isAdmin={false}
+              />
+            </aside>
+          </div>
           <div className="flex-1 space-y-12">
-            <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/90 p-10 shadow-2xl shadow-stone-900/15 backdrop-blur lg:grid-cols-[1.7fr_1fr] lg:p-12 animate-fade-up">
+            <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/90 p-10 shadow-2xl shadow-stone-900/15 backdrop-blur lg:grid-cols-[minmax(0,2.2fr)_1fr] lg:p-12 animate-fade-up">
               <div>
                 <AnimatedHeroTitle text={content.heroTitle} />
                 <p className="mt-6 text-lg text-stone-600">
