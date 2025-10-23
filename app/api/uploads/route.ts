@@ -1,12 +1,21 @@
-import { promises as fs } from "node:fs";
-import { randomUUID } from "node:crypto";
-import path from "node:path";
+import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 import { getServerAuthSession } from "@/lib/auth";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
-const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"]);
+const ALLOWED_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+]);
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: Request) {
   const session = await getServerAuthSession();
@@ -29,15 +38,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "File is too large." }, { status: 413 });
   }
 
-  const extension = file.type === "image/svg+xml" ? ".svg" : `.${file.type.split("/").pop() ?? "png"}`;
-  const fileName = `${randomUUID()}${extension}`;
+  try {
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+    // Upload to Cloudinary
+    const result = await new Promise<any>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: "ccjm-homesteading",
+            resource_type: "auto",
+            public_id: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}`,
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        )
+        .end(buffer);
+    });
 
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  await fs.writeFile(path.join(UPLOAD_DIR, fileName), buffer);
-
-  const url = `/uploads/${fileName}`;
-  return NextResponse.json({ url }, { status: 201 });
+    // Return the secure URL
+    return NextResponse.json({ url: result.secure_url }, { status: 201 });
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    return NextResponse.json(
+      { message: "Failed to upload image." },
+      { status: 500 }
+    );
+  }
 }
