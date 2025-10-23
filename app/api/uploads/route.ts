@@ -11,27 +11,30 @@ const ALLOWED_TYPES = new Set([
   "image/svg+xml",
 ]);
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 export async function POST(request: Request) {
+  // Configure Cloudinary at runtime (not build time)
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
   // Debug: Check if Cloudinary is configured
-  if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 
-      !process.env.CLOUDINARY_API_KEY || 
-      !process.env.CLOUDINARY_API_SECRET) {
+  if (!cloudName || !apiKey || !apiSecret) {
     console.error('Cloudinary env vars missing:', {
-      cloudName: !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-      apiKey: !!process.env.CLOUDINARY_API_KEY,
-      apiSecret: !!process.env.CLOUDINARY_API_SECRET,
+      cloudName: !!cloudName,
+      apiKey: !!apiKey,
+      apiSecret: !!apiSecret,
     });
     return NextResponse.json(
       { message: "Server configuration error. Check Cloudinary credentials." },
       { status: 500 }
     );
   }
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+  });
   
   const session = await getServerAuthSession();
   if (!session?.user || session.user.role !== "admin") {
