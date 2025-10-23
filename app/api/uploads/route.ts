@@ -57,9 +57,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    console.log('Starting Cloudinary upload...');
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    console.log(`Buffer created, size: ${buffer.length} bytes`);
 
     // Upload to Cloudinary
     const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
@@ -71,8 +73,13 @@ export async function POST(request: Request) {
             public_id: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}`,
           },
           (error, result) => {
-            if (error) reject(error);
-            else resolve(result as { secure_url: string });
+            if (error) {
+              console.error('Cloudinary upload_stream error:', error);
+              reject(error);
+            } else {
+              console.log('Cloudinary upload successful:', result?.secure_url);
+              resolve(result as { secure_url: string });
+            }
           }
         )
         .end(buffer);
@@ -82,8 +89,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: result.secure_url }, { status: 201 });
   } catch (error) {
     console.error("Cloudinary upload error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to upload image.";
     return NextResponse.json(
-      { message: "Failed to upload image." },
+      { message: errorMessage },
       { status: 500 }
     );
   }
