@@ -256,4 +256,11 @@ body {
     transition: none !important;
     transform: none !important;
   }
+  
+  /* Disable hover transforms for motion-sensitive users */
+  * {
+    --tw-translate-y: 0 !important;
+    --tw-scale-x: 1 !important;
+    --tw-scale-y: 1 !important;
+  }
 }

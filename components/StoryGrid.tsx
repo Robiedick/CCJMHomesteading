@@ -54,7 +54,7 @@ export default function StoryGrid({ articles, readMoreLabel }: StoryGridProps) {
                   onClick={() => openArticle(article)}
                 >
                   <span className="relative z-10">{readMoreLabel}</span>
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-500 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100" />
+                  <div className="absolute inset-0 z-0 bg-gradient-to-br from-emerald-400 to-emerald-500 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100" />
                 </button>
               </div>
             </div>

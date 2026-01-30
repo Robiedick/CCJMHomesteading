@@ -315,7 +315,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                     className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-8 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-emerald-500/50 hover:-translate-y-1"
                   >
                     <span className="relative z-10">{content.heroCtaPrimaryLabel}</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                    <div className="absolute inset-0 z-0 bg-gradient-to-br from-emerald-400 to-emerald-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                   </Link>
                   <Link
                     href={`/${locale}#topics`}
