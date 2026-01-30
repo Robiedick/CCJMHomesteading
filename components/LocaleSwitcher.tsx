@@ -31,11 +31,11 @@ export default function LocaleSwitcher({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-full border border-white/50 bg-white/60 px-3 py-1 text-xs text-stone-600 shadow-sm shadow-emerald-100/40 backdrop-blur">
-      <span className="font-medium uppercase tracking-[0.2em]">
+    <div className="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-700 shadow-sm">
+      <span className="font-bold uppercase tracking-[0.2em]">
         {labels.label}
       </span>
-      <div className="flex overflow-hidden rounded-full border border-stone-200">
+      <div className="flex overflow-hidden rounded-lg border-2 border-gray-200">
         {locales.map((locale) => {
           const { short, label } = getLocaleLabel(locale);
           const isActive = currentLocale === locale;
@@ -46,10 +46,10 @@ export default function LocaleSwitcher({
               onClick={() => switchLocale(locale)}
               disabled={isPending}
               className={clsx(
-                "px-3 py-1 text-xs font-semibold transition",
+                "px-3 py-1 text-xs font-bold transition-all duration-200",
                 isActive
-                  ? "bg-emerald-600 text-white"
-                  : "bg-white/0 text-stone-600 hover:bg-white/70",
+                  ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm"
+                  : "bg-white text-gray-600 hover:bg-gray-50",
               )}
               aria-label={label}
             >
