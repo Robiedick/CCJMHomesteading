@@ -30,7 +30,7 @@ function AnimatedHeroTitle({ text }: { text: string }) {
 
   return (
     <h1
-      className="hero-title relative text-4xl font-semibold leading-tight text-stone-900 sm:text-5xl"
+      className="hero-title relative text-5xl font-bold leading-tight text-gray-900 sm:text-6xl"
       aria-label={text}
     >
       <span className="sr-only">{text}</span>
@@ -234,8 +234,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
   };
 
   return (
-    <div className="relative min-h-screen text-stone-900 animate-fade-in">
-      <div className="absolute inset-0 bg-gradient-to-b from-white/92 via-white/88 to-white/94 backdrop-blur-sm" />
+    <div className="relative min-h-screen text-gray-900 animate-fade-in">
       <SearchFlyout
         locale={locale}
         searchQuery={searchQuery}
@@ -245,9 +244,9 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
         labels={searchLabels}
       />
       <div className="relative">
-        <div className="mx-auto flex w/full max-w-7xl flex-col gap-8 px-6 py-10 lg:flex-row">
-          <div className="flex w/full flex-col gap-6 lg:w-72 lg:flex-none">
-            <aside className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-stone-900/15 backdrop-blur animate-fade-up">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 lg:flex-row">
+          <div className="flex w-full flex-col gap-6 lg:w-80 lg:flex-none">
+            <aside className="rounded-2xl border border-gray-200 bg-white p-8 shadow-xl shadow-gray-900/5 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-900/10 animate-fade-up">
               <div>
                 {content.siteLogoUrl ? (
                   <Image
@@ -255,16 +254,16 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                     alt={content.siteName}
                     width={64}
                     height={64}
-                    className="h-12 w-12 rounded-xl shadow-sm"
+                    className="h-14 w-14 rounded-2xl shadow-lg ring-2 ring-emerald-100"
                     unoptimized
                   />
                 ) : null}
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
+                <p className="mt-5 text-xs font-bold uppercase tracking-[0.25em] text-emerald-600">
                   {content.siteName}
                 </p>
-                <p className="mt-2 text-sm text-stone-500">{content.navTagline}</p>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600">{content.navTagline}</p>
               </div>
-              <nav className="mt-6 flex flex-col gap-3 text-sm">
+              <nav className="mt-8 flex flex-col gap-3 text-sm">
                 <LocaleSwitcher
                   currentLocale={locale}
                   labels={{
@@ -275,20 +274,20 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                 />
                 <Link
                   href={`/${locale}#stories`}
-                  className="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-white/80 px-4 py-2 font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-white"
+                  className="inline-flex items-center justify-center rounded-xl border-2 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/30 px-5 py-3 font-semibold text-emerald-700 shadow-sm transition-all duration-200 hover:border-emerald-200 hover:shadow-md hover:-translate-y-0.5"
                 >
                   {content.navLatestStoriesLabel}
                 </Link>
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-5 py-3 font-bold text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5"
                 >
                   {content.navSignInLabel}
                 </Link>
               </nav>
             </aside>
 
-            <aside className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-stone-900/15 backdrop-blur">
+            <aside className="rounded-2xl border border-gray-200 bg-white p-8 shadow-xl shadow-gray-900/5 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-900/10">
               <CategoriesSidebar
                 categories={sidebarCategories}
                 locale={locale}
@@ -302,22 +301,25 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
             </aside>
           </div>
           <div className="flex-1 space-y-12">
-            <header className="grid gap-8 rounded-3xl border border-white/70 bg-white/90 p-10 shadow-2xl shadow-stone-900/15 backdrop-blur lg:grid-cols-[minmax(0,2.2fr)_1fr] lg:p-12 animate-fade-up">
-              <div>
+            <header className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-emerald-50/20 to-white p-12 shadow-xl shadow-gray-900/5 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-900/10 lg:p-16 animate-fade-up">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-blue-500/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.8fr)_1fr]">
+              <div className="relative">
                 <AnimatedHeroTitle text={content.heroTitle} />
-                <p className="mt-6 text-lg text-stone-600">
+                <p className="mt-8 text-lg leading-relaxed text-gray-600">
                   {content.heroDescription}
                 </p>
-                <div className="mt-8 flex flex-wrap gap-3">
+                <div className="mt-10 flex flex-wrap gap-4">
                   <Link
                     href={`/${locale}#stories`}
-                    className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/50 transition hover:bg-emerald-700"
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-8 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-emerald-500/50 hover:-translate-y-1"
                   >
-                    {content.heroCtaPrimaryLabel}
+                    <span className="relative z-10">{content.heroCtaPrimaryLabel}</span>
+                    <div className="absolute inset-0 z-0 bg-gradient-to-br from-emerald-400 to-emerald-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                   </Link>
                   <Link
                     href={`/${locale}#topics`}
-                    className="rounded-full border border-stone-300 bg-white/70 px-6 py-3 text-sm font-semibold text-stone-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                    className="rounded-xl border-2 border-gray-300 bg-white px-8 py-4 text-base font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:text-emerald-700 hover:shadow-md hover:-translate-y-1"
                   >
                     {content.heroCtaSecondaryLabel}
                   </Link>
@@ -325,53 +327,54 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
               </div>
               <div className="flex flex-col gap-6">
                 {content.heroImageUrl ? (
-                  <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/60 shadow-xl shadow-emerald-100/40">
+                  <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                     <Image
                       src={content.heroImageUrl}
                       alt={content.siteName}
                       width={640}
                       height={480}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       unoptimized
                     />
                   </div>
                 ) : null}
-                <div className="rounded-3xl border border-emerald-200/70 bg-emerald-50/70 p-8 text-sm text-stone-700 shadow-lg shadow-emerald-100/60">
-                  <p className="text-emerald-700">{content.heroEditorTitle}</p>
-                  <p className="mt-3 leading-relaxed text-stone-600">
+                <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-8 shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20">
+                  <p className="text-sm font-bold uppercase tracking-wider text-emerald-700">{content.heroEditorTitle}</p>
+                  <p className="mt-4 leading-relaxed text-gray-700">
                     {content.heroEditorDescription}
                   </p>
                   <Link
                     href="/admin"
-                    className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-white/80 px-5 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-400 hover:text-emerald-800"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl border-2 border-emerald-300 bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition-all duration-200 hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5"
                   >
                     {content.heroEditorLinkLabel}
                   </Link>
                 </div>
+              </div>
               </div>
             </header>
 
             <main className="flex flex-col gap-12 pb-12">
               <section
                 id="stories"
-                className="rounded-3xl border border-white/50 bg-white/70 p-8 shadow-xl shadow-stone-200/30"
+                className="rounded-2xl border border-gray-200 bg-white p-10 shadow-xl shadow-gray-900/5 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-900/10"
               >
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold text-stone-900">
+                    <h2 className="text-3xl font-bold text-gray-900">
                       {content.storiesTitle}
                     </h2>
-                    <p className="mt-2 text-sm text-stone-600">
+                    <p className="mt-3 text-base text-gray-600">
                       {content.storiesDescription}
                     </p>
                   </div>
-                  <p className="text-sm font-medium text-stone-500">
+                  <p className="text-sm font-semibold text-gray-500">
                     {totalArticles} {content.storiesCountLabel} {storyCountLabel}
                   </p>
                 </div>
                 {visibleArticles.length === 0 ? (
-                  <div className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white/70 p-10 text-center">
-                    <p className="text-sm text-stone-500">{content.storiesEmpty}</p>
+                  <div className="mt-10 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center">
+                    <p className="text-base text-gray-500">{content.storiesEmpty}</p>
                   </div>
                 ) : (
                   <>
@@ -379,42 +382,42 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                       articles={articleCards}
                       readMoreLabel={content.storiesReadMore}
                     />
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-xs font-medium tracking-wider text-stone-400">
+                    <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm font-semibold tracking-wide text-gray-400">
                         {paginationSummary}
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {hasPreviousPage ? (
                           <Link
                             href={createPageHref(safeCurrentPage - 1)}
                             aria-label="Previous page"
-                            className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
+                            className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:text-emerald-700 hover:shadow-md hover:-translate-y-0.5"
                           >
                             ←
                           </Link>
                         ) : (
                           <span
                             aria-hidden
-                            className="inline-flex items-center gap-2 rounded-full border border-stone-100 bg-stone-100/70 px-3 py-1.5 text-xs font-semibold text-stone-300"
+                            className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-gray-100 px-4 py-2 text-sm font-bold text-gray-300"
                           >
                             ←
                           </span>
                         )}
-                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-500">
+                        <span className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-md">
                           {safeCurrentPage} / {totalPages}
                         </span>
                         {hasNextPage ? (
                           <Link
                             href={createPageHref(safeCurrentPage + 1)}
                             aria-label="Next page"
-                            className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
+                            className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:text-emerald-700 hover:shadow-md hover:-translate-y-0.5"
                           >
                             →
                           </Link>
                         ) : (
                           <span
                             aria-hidden
-                            className="inline-flex items-center gap-2 rounded-full border border-stone-100 bg-stone-100/70 px-3 py-1.5 text-xs font-semibold text-stone-300"
+                            className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-gray-100 px-4 py-2 text-sm font-bold text-gray-300"
                           >
                             →
                           </span>
@@ -428,10 +431,10 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           </div>
         </div>
 
-        <footer className="border-t border-white/60 bg-white/75 py-6 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 text-sm text-stone-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>{content.footerNote.replace("{{year}}", `${new Date().getFullYear()}`)}</p>
-            <p className="text-stone-400">{content.footerSignature}</p>
+        <footer className="border-t border-gray-200 bg-white/90 py-8 backdrop-blur-sm">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-medium">{content.footerNote.replace("{{year}}", `${new Date().getFullYear()}`)}</p>
+            <p className="text-gray-500">{content.footerSignature}</p>
           </div>
         </footer>
       </div>
